@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тестирование</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="container narrow" id="app">
+
+  <div id="screen-join" class="center">
+    <h1 id="join-title">Тестирование</h1>
+    <div class="card">
+      <label>Введите ваше имя и фамилию</label>
+      <input type="text" id="student-name" placeholder="Иванов Иван">
+      <button class="btn" style="margin-top:16px;width:100%" onclick="joinTest()">Начать тест</button>
+      <div class="error" id="join-error"></div>
+    </div>
+  </div>
+
+  <div id="screen-quiz" style="display:none">
+    <h1 id="quiz-title"></h1>
+    <div class="q-nav" id="q-nav"></div>
+    <div id="questions-list"></div>
+    <button class="btn" style="width:100%" onclick="submitQuiz()">Отправить ответы</button>
+    <div class="error" id="submit-error"></div>
+  </div>
+
+  <div id="screen-result" class="center" style="display:none">
+    <h1>Тест завершён</h1>
+    <div class="card">
+      <p class="muted">Ваш результат:</p>
+      <div class="code-big" id="result-score"></div>
+      <p id="result-percent" class="muted"></p>
+    </div>
+  </div>
+
+</div>
+<script src="/student.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "quiz-app",
+  "version": "1.0.0",
+  "description": "Локальное приложение для тестирования учеников через QR-код",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5",
+    "qrcode": "^1.5.3",
+    "xlsx": "^0.18.5",
+    "nanoid": "^3.3.7"
+  }
+}

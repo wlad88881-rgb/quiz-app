@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тестирование — панель преподавателя</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="container" id="app">
+
+  <!-- ЭКРАН: СПИСОК ТЕСТОВ -->
+  <div id="screen-list">
+    <h1>Тестирование учеников</h1>
+    <p class="subtitle">Создавайте тесты и запускайте сессии с QR-кодом</p>
+    <button class="btn" onclick="showEditor()">+ Новый тест</button>
+    <h2>Мои тесты</h2>
+    <div id="tests-list"></div>
+  </div>
+
+  <!-- ЭКРАН: РЕДАКТОР ТЕСТА -->
+  <div id="screen-editor" style="display:none">
+    <button class="btn outline small" onclick="showList()">&larr; Назад к списку</button>
+    <h1 id="editor-title">Новый тест</h1>
+    <div class="card">
+      <label>Название теста</label>
+      <input type="text" id="test-title" placeholder="Например: Блок 5 — Кинематические пары">
+      <div id="questions-container"></div>
+      <button class="btn outline" style="margin-top:16px" onclick="addQuestion()">+ Добавить вопрос</button>
+    </div>
+    <button class="btn" onclick="saveTest()">Сохранить тест</button>
+    <span id="save-error" class="error"></span>
+  </div>
+
+  <!-- ЭКРАН: СЕССИЯ (QR + ЖИВЫЕ РЕЗУЛЬТАТЫ) -->
+  <div id="screen-session" style="display:none">
+    <button class="btn outline small" onclick="showList()">&larr; Назад к списку</button>
+    <h1 id="session-title"></h1>
+    <div class="row between">
+      <span id="session-status" class="badge live">Идёт тестирование</span>
+      <div>
+        <button class="btn outline small" onclick="exportResults()">Экспорт в Excel</button>
+        <button class="btn danger small" id="end-session-btn" onclick="endSession()">Завершить сессию</button>
+      </div>
+    </div>
+
+    <div class="card qr-box" id="qr-card">
+      <p class="muted">Ученики сканируют этот код камерой телефона (должны быть в той же Wi-Fi сети)</p>
+      <img id="qr-img" src="" alt="QR-код" width="260">
+      <div class="code-big" id="session-code"></div>
+      <p class="muted">Или вручную открыть ссылку:</p>
+      <div class="link-box" id="session-link"></div>
+    </div>
+
+    <h2>Результаты в реальном времени</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr><th>Ученик</th><th>Статус</th><th>Баллы</th></tr>
+        </thead>
+        <tbody id="results-body"></tbody>
+      </table>
+      <p class="muted" id="no-participants">Пока никто не подключился</p>
+    </div>
+  </div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/teacher.js"></script>
+</body>
+</html>
