@@ -67,6 +67,14 @@ input[type=text], input[type=number], textarea, select {
 
 label { font-weight: 600; font-size: 14px; display: block; margin-top: 12px; }
 
+.import-box {
+  background: var(--gray);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  margin-top: 16px;
+}
+
 .question-block {
   border: 1px solid var(--border);
   border-radius: 10px;

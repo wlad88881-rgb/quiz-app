@@ -262,6 +262,44 @@ function exportResults() {
   window.location.href = '/api/sessions/' + currentSessionCode + '/export';
 }
 
+async function importFromExcel() {
+  const fileInput = document.getElementById('import-file');
+  const statusEl = document.getElementById('import-status');
+  const file = fileInput.files[0];
+  if (!file) return;
+
+  statusEl.textContent = 'Загрузка и обработка файла...';
+  statusEl.className = 'muted';
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch('/api/import-questions', { method: 'POST', body: formData });
+    const data = await res.json();
+
+    if (!res.ok) {
+      statusEl.textContent = data.error || 'Не удалось импортировать вопросы';
+      statusEl.className = 'error';
+      return;
+    }
+
+    data.questions.forEach(q => addQuestion(q));
+
+    let msg = `Импортировано вопросов: ${data.questions.length}`;
+    if (data.skipped && data.skipped.length > 0) {
+      msg += `. Пропущено строк: ${data.skipped.length} (проверьте формат — скачайте шаблон для примера)`;
+    }
+    statusEl.textContent = msg;
+    statusEl.className = 'muted';
+  } catch (e) {
+    statusEl.textContent = 'Ошибка при загрузке файла';
+    statusEl.className = 'error';
+  } finally {
+    fileInput.value = '';
+  }
+}
+
 // ---------- УТИЛИТЫ ----------
 
 function escapeHtml(s) {

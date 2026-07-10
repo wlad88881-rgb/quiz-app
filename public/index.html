@@ -25,6 +25,18 @@
     <div class="card">
       <label>Название теста</label>
       <input type="text" id="test-title" placeholder="Например: Блок 5 — Кинематические пары">
+
+      <div class="import-box">
+        <label>Импорт вопросов из Excel</label>
+        <p class="muted" style="margin-top:2px">Загрузите заполненный файл, чтобы не вбивать вопросы вручную</p>
+        <div class="row" style="margin-top:8px">
+          <a class="btn outline small" href="/api/import-template">Скачать шаблон .xlsx</a>
+          <input type="file" id="import-file" accept=".xlsx,.xls" style="display:none" onchange="importFromExcel()">
+          <button class="btn outline small" onclick="document.getElementById('import-file').click()">Загрузить файл с вопросами</button>
+        </div>
+        <div id="import-status" class="muted" style="margin-top:8px"></div>
+      </div>
+
       <div id="questions-container"></div>
       <button class="btn outline" style="margin-top:16px" onclick="addQuestion()">+ Добавить вопрос</button>
     </div>
