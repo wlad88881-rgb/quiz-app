@@ -7,6 +7,13 @@
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+<div class="brand-header">
+  <div class="brand-mark">ERG</div>
+  <div class="brand-text">
+    <div class="brand-title">ERG Corporate University</div>
+    <div class="brand-subtitle">Академия ТОиР</div>
+  </div>
+</div>
 <div class="container narrow" id="app">
 
   <div id="screen-join" class="center">
@@ -27,13 +34,15 @@
     <div class="error" id="submit-error"></div>
   </div>
 
-  <div id="screen-result" class="center" style="display:none">
-    <h1>Тест завершён</h1>
-    <div class="card">
+  <div id="screen-result" style="display:none">
+    <h1 class="center">Тест завершён</h1>
+    <div class="card center">
       <p class="muted">Ваш результат:</p>
       <div class="code-big" id="result-score"></div>
       <p id="result-percent" class="muted"></p>
     </div>
+    <h2>Разбор ответов</h2>
+    <div id="review-list"></div>
   </div>
 
 </div>

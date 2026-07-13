@@ -2,6 +2,8 @@
   --navy: #2C3E50;
   --orange: #F07C00;
   --gray: #F4F4F4;
+  --gold: #FFC671;
+  --teal: #42BFCB;
   --green: #2e9e4f;
   --red: #d64545;
   --border: #dfe3e6;
@@ -10,12 +12,37 @@
 * { box-sizing: border-box; }
 
 body {
-  font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family: 'Liberation Sans', Arial, Helvetica, sans-serif;
   background: var(--gray);
   color: var(--navy);
   margin: 0;
   padding: 0;
 }
+
+.brand-header {
+  background: var(--navy);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 3px solid var(--orange);
+}
+.brand-mark {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--orange), var(--gold));
+  color: var(--navy);
+  font-weight: 800;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.brand-text { line-height: 1.25; }
+.brand-title { color: white; font-weight: 700; font-size: 15px; }
+.brand-subtitle { color: var(--teal); font-size: 12px; font-weight: 600; letter-spacing: 0.3px; }
 
 .container {
   max-width: 920px;
@@ -145,6 +172,27 @@ th { color: #6b7c8f; font-weight: 600; }
 }
 .option-choice input { margin-right: 10px; }
 .option-choice.selected { border-color: var(--orange); background: #fff6ec; }
+
+.review-option {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  margin-top: 6px;
+  font-size: 14px;
+  background: white;
+}
+.review-option.correct {
+  background: #e6f4ea;
+  border-color: var(--green);
+  color: #1e6b34;
+  font-weight: 600;
+}
+.review-option.wrong {
+  background: #fdeaea;
+  border-color: var(--red);
+  color: #a02f2f;
+  font-weight: 600;
+}
 
 .center { text-align: center; }
 .muted { color: #6b7c8f; font-size: 14px; }

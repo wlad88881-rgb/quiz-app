@@ -116,6 +116,41 @@ async function submitQuiz() {
   document.getElementById('screen-result').style.display = 'block';
   document.getElementById('result-score').textContent = `${data.score} / ${data.total}`;
   document.getElementById('result-percent').textContent = Math.round((data.score / data.total) * 100) + '%';
+
+  renderReview(data.review);
+}
+
+function renderReview(review) {
+  const container = document.getElementById('review-list');
+  container.innerHTML = review.map((q, i) => {
+    const givenSet = q.multi ? (q.given || []) : (q.given !== undefined ? [q.given] : []);
+    const correctSet = q.multi ? q.correct : [q.correct];
+
+    const optionsHtml = q.options.map((opt, oi) => {
+      const isCorrectOpt = correctSet.includes(oi);
+      const wasGiven = givenSet.includes(oi);
+      let cls = 'review-option';
+      let mark = '';
+      if (isCorrectOpt) { cls += ' correct'; mark = '✓ '; }
+      if (wasGiven && !isCorrectOpt) { cls += ' wrong'; mark = '✕ '; }
+      if (wasGiven && isCorrectOpt) { mark = '✓ '; }
+      return `<div class="${cls}">${mark}${escapeHtml(opt)}</div>`;
+    }).join('');
+
+    const statusBadge = q.isCorrect
+      ? '<span class="badge live">Верно</span>'
+      : '<span class="badge" style="background:#fdeaea;color:#d64545">Неверно</span>';
+
+    return `
+      <div class="card">
+        <div class="row between">
+          <strong>${i + 1}. ${escapeHtml(q.text)}</strong>
+          ${statusBadge}
+        </div>
+        <div style="margin-top:10px">${optionsHtml}</div>
+      </div>
+    `;
+  }).join('');
 }
 
 function escapeHtml(s) {
