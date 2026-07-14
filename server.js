@@ -11,7 +11,7 @@ const db = require('./db');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
-const nanoid = customAlphabet('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 5); // короткий код без похожих символов
+const nanoid = customAlphabet('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 5);
 const participantId = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 12);
 
 const app = express();
@@ -35,15 +35,11 @@ function getLocalIp() {
   return 'localhost';
 }
 
-// Если программа развёрнута на хостинге (Render и т.п.), используем публичный адрес.
-// Иначе — локальный IP для работы в домашней/офисной Wi-Fi сети.
 function getBaseUrl() {
   if (process.env.PUBLIC_URL) return process.env.PUBLIC_URL.replace(/\/$/, '');
   if (process.env.RENDER_EXTERNAL_URL) return process.env.RENDER_EXTERNAL_URL.replace(/\/$/, '');
   return `http://${getLocalIp()}:${PORT}`;
 }
-
-// ---------- ТЕСТЫ ----------
 
 app.get('/api/tests', (req, res) => {
   const data = db.load();
@@ -71,7 +67,7 @@ app.post('/api/tests', async (req, res) => {
       id: 'q' + i,
       text: q.text,
       options: q.options,
-      correct: q.correct, // индекс правильного варианта (или массив индексов, если multi)
+      correct: q.correct,
       multi: !!q.multi
     })),
     createdAt: Date.now()
@@ -103,8 +99,6 @@ app.delete('/api/tests/:id', async (req, res) => {
   await db.update((data) => { delete data.tests[req.params.id]; });
   res.json({ ok: true });
 });
-
-// ---------- ИМПОРТ ВОПРОСОВ ИЗ EXCEL ----------
 
 app.get('/api/import-template', (req, res) => {
   const headers = ['Вопрос', 'Вариант 1', 'Вариант 2', 'Вариант 3', 'Вариант 4', 'Вариант 5', 'Правильные (номера через запятую)'];
@@ -140,10 +134,9 @@ app.post('/api/import-questions', upload.single('file'), (req, res) => {
   const questions = [];
   const skipped = [];
 
-  // первая строка — заголовок, пропускаем
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
-    if (!row || row.every(c => String(c).trim() === '')) continue; // пустая строка
+    if (!row || row.every(c => String(c).trim() === '')) continue;
 
     const text = String(row[0] || '').trim();
     const options = [];
@@ -181,8 +174,6 @@ app.post('/api/import-questions', upload.single('file'), (req, res) => {
 
   res.json({ questions, skipped });
 });
-
-// ---------- СЕССИИ ----------
 
 app.post('/api/sessions', async (req, res) => {
   const { testId } = req.body;
@@ -222,7 +213,6 @@ app.get('/api/sessions/:code', (req, res) => {
   res.json(session);
 });
 
-// Ученик открывает тест по коду — получает вопросы БЕЗ правильных ответов
 app.get('/api/sessions/:code/quiz', (req, res) => {
   const data = db.load();
   const session = data.sessions[req.params.code];
@@ -305,8 +295,17 @@ app.post('/api/sessions/:code/submit', async (req, res) => {
     return p;
   });
 
+  const review = test.questions.map(q => ({
+    text: q.text,
+    options: q.options,
+    multi: q.multi,
+    given: detail[q.id].given,
+    correct: detail[q.id].correct,
+    isCorrect: detail[q.id].isCorrect
+  }));
+
   io.to('session:' + req.params.code).emit('participant:finished', result);
-  res.json({ score, total });
+  res.json({ score, total, review });
 });
 
 app.post('/api/sessions/:code/end', async (req, res) => {
@@ -351,13 +350,9 @@ app.get('/api/sessions/:code/export', (req, res) => {
   res.send(buf);
 });
 
-// ---------- СТРАНИЦЫ ----------
-
 app.get('/s/:code', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'student.html'));
 });
-
-// ---------- SOCKET.IO ----------
 
 io.on('connection', (socket) => {
   socket.on('teacher:watch', (code) => {
@@ -380,3 +375,4 @@ async function start() {
 }
 
 start();
+
