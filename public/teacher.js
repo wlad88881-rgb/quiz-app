@@ -328,31 +328,3 @@ async function importFromExcel() {
     if (!res.ok) {
       statusEl.textContent = data.error || 'Не удалось импортировать вопросы';
       statusEl.className = 'error';
-      return;
-    }
-
-    data.questions.forEach(q => addQuestion(q));
-
-    let msg = `Импортировано вопросов: ${data.questions.length}`;
-    if (data.skipped && data.skipped.length > 0) {
-      msg += `. Пропущено строк: ${data.skipped.length} (проверьте формат — скачайте шаблон для примера)`;
-    }
-    statusEl.textContent = msg;
-    statusEl.className = 'muted';
-  } catch (e) {
-    statusEl.textContent = 'Ошибка при загрузке файла';
-    statusEl.className = 'error';
-  } finally {
-    fileInput.value = '';
-  }
-}
-
-// ---------- УТИЛИТЫ ----------
-
-function escapeHtml(s) {
-  return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-function escapeAttr(s) { return escapeHtml(s); }
-
-// ---------- СТАРТ ----------
-showList();
