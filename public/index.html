@@ -16,13 +16,27 @@
 </div>
 <div class="container" id="app">
 
-  <!-- ЭКРАН: СПИСОК ТЕСТОВ -->
+  <!-- ЭКРАН: СПИСОК ТЕСТОВ И ТРЕНАЖЁРОВ -->
   <div id="screen-list">
     <h1>Тестирование учеников</h1>
-    <p class="subtitle">Создавайте тесты и запускайте сессии с QR-кодом</p>
-    <button class="btn" onclick="showEditor()">+ Новый тест</button>
-    <h2>Мои тесты</h2>
-    <div id="tests-list"></div>
+    <p class="subtitle">Создавайте тесты, запускайте диагностические тренажёры и сессии с QR-кодом</p>
+
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-btn-tests" onclick="switchTab('tests')">Тесты</button>
+      <button class="tab-btn" id="tab-btn-labs" onclick="switchTab('labs')">Тренажёры</button>
+    </div>
+
+    <div id="tab-tests">
+      <button class="btn" onclick="showEditor()">+ Новый тест</button>
+      <h2>Мои тесты</h2>
+      <div id="tests-list"></div>
+    </div>
+
+    <div id="tab-labs" style="display:none">
+      <h2>Диагностические тренажёры</h2>
+      <p class="muted">Ученик получает показания приборов и звук неисправности, ставит диагноз — вместо выбора ответа на текстовый вопрос.</p>
+      <div id="labs-list"></div>
+    </div>
   </div>
 
   <!-- ЭКРАН: РЕДАКТОР ТЕСТА -->
