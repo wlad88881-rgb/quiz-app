@@ -601,13 +601,10 @@ io.on('connection', (socket) => {
 });
 
 async function seedLabs() {
-  const data = db.load();
-  const missing = SEED_LABS.filter(l => !data.labs[l.id]);
-  if (missing.length === 0) return;
   await db.update((d) => {
-    missing.forEach(l => { d.labs[l.id] = l; });
+    SEED_LABS.forEach(l => { d.labs[l.id] = l; });
   });
-  console.log(`[labs] Добавлено тренажёров: ${missing.length}`);
+  console.log(`[labs] Синхронизировано тренажёров: ${SEED_LABS.length}`);
 }
 
 async function start() {
