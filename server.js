@@ -400,6 +400,90 @@ app.get('/api/labs', (req, res) => {
   res.json(list);
 });
 
+app.get('/api/labs/:id', (req, res) => {
+  const data = db.load();
+  const lab = data.labs[req.params.id];
+  if (!lab) return res.status(404).json({ error: 'Тренажёр не найден' });
+  res.json(lab);
+});
+
+function validateLabPayload(body) {
+  const { title, faults } = body;
+  if (!title || !title.trim()) return 'Введите название тренажёра';
+  if (!Array.isArray(faults) || faults.length === 0) return 'Добавьте хотя бы одну неисправность';
+  for (const f of faults) {
+    if (!f.label || !f.label.trim()) return 'У каждой неисправности должно быть название диагноза';
+    if (!f.explain || !f.explain.trim()) return 'У каждой неисправности должно быть объяснение';
+    if (!Array.isArray(f.variations) || f.variations.length === 0) {
+      return `У неисправности «${f.label}» должна быть хотя бы одна вариация показаний`;
+    }
+    for (const v of f.variations) {
+      if (!v.title || !v.vibration || !v.vibration.value || !v.temp || !v.temp.value || !v.sound || !v.sound.type) {
+        return `Заполните все поля показаний в вариациях для «${f.label}»`;
+      }
+    }
+  }
+  return null;
+}
+
+app.post('/api/labs', async (req, res) => {
+  const err = validateLabPayload(req.body);
+  if (err) return res.status(400).json({ error: err });
+
+  const id = participantId();
+  const lab = {
+    id,
+    title: req.body.title.trim(),
+    intro: (req.body.intro || '').trim(),
+    faults: req.body.faults.map((f, fi) => ({
+      id: f.id || ('f' + fi + '_' + id),
+      label: f.label.trim(),
+      explain: f.explain.trim(),
+      variations: f.variations.map(v => ({
+        title: v.title.trim(),
+        vibration: { value: v.vibration.value.trim(), desc: (v.vibration.desc || '').trim() },
+        temp: { value: v.temp.value.trim(), desc: (v.temp.desc || '').trim() },
+        sound: { type: v.sound.type, desc: (v.sound.desc || '').trim() }
+      }))
+    })),
+    createdAt: Date.now(),
+    custom: true
+  };
+  await db.update((d) => { d.labs[id] = lab; });
+  res.json(lab);
+});
+
+app.put('/api/labs/:id', async (req, res) => {
+  const err = validateLabPayload(req.body);
+  if (err) return res.status(400).json({ error: err });
+
+  const result = await db.update((d) => {
+    const existing = d.labs[req.params.id];
+    if (!existing) return null;
+    existing.title = req.body.title.trim();
+    existing.intro = (req.body.intro || '').trim();
+    existing.faults = req.body.faults.map((f, fi) => ({
+      id: f.id || ('f' + fi + '_' + req.params.id),
+      label: f.label.trim(),
+      explain: f.explain.trim(),
+      variations: f.variations.map(v => ({
+        title: v.title.trim(),
+        vibration: { value: v.vibration.value.trim(), desc: (v.vibration.desc || '').trim() },
+        temp: { value: v.temp.value.trim(), desc: (v.temp.desc || '').trim() },
+        sound: { type: v.sound.type, desc: (v.sound.desc || '').trim() }
+      }))
+    }));
+    return existing;
+  });
+  if (!result) return res.status(404).json({ error: 'Тренажёр не найден' });
+  res.json(result);
+});
+
+app.delete('/api/labs/:id', async (req, res) => {
+  await db.update((d) => { delete d.labs[req.params.id]; });
+  res.json({ ok: true });
+});
+
 app.post('/api/lab-sessions', async (req, res) => {
   const { labId } = req.body;
   const data = db.load();
