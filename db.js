@@ -9,7 +9,7 @@ const GIST_ID = process.env.GITHUB_GIST_ID;
 const USE_GIST = !!(GITHUB_TOKEN && GIST_ID);
 
 function defaultData() {
-  return { tests: {}, sessions: {} };
+  return { tests: {}, sessions: {}, labs: {} };
 }
 
 let cache = defaultData();
