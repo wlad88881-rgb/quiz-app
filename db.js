@@ -12,6 +12,13 @@ function defaultData() {
   return { tests: {}, sessions: {}, labs: {} };
 }
 
+function ensureShape(data) {
+  if (!data.tests) data.tests = {};
+  if (!data.sessions) data.sessions = {};
+  if (!data.labs) data.labs = {};
+  return data;
+}
+
 let cache = defaultData();
 let initialized = false;
 
@@ -77,6 +84,7 @@ async function initCache() {
     cache = loadLocal();
     console.log('[db] Постоянное хранилище не настроено (GITHUB_TOKEN/GITHUB_GIST_ID отсутствуют) — используется локальный файл data/db.json');
   }
+  cache = ensureShape(cache);
   initialized = true;
 }
 
