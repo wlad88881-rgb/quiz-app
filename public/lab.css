@@ -1,0 +1,88 @@
+.case-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  margin-top: 14px;
+}
+.case-card .case-title {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+
+.gauges {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.gauge {
+  background: var(--gray);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.gauge.wide { grid-column: 1 / -1; }
+.gauge-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: #6b7c8f;
+  margin-bottom: 3px;
+}
+.gauge-value {
+  font-family: 'Courier New', monospace;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.gauge-desc { font-size: 12.5px; color: #4a5a68; margin-top: 3px; line-height: 1.4; }
+
+.sound-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--gray);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+.sound-desc { font-size: 13px; color: #3d4a56; flex: 1; }
+
+.btn-audio {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--navy);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-audio:hover { opacity: 0.9; }
+.btn-audio.playing { background: var(--orange); }
+.btn-audio:disabled { opacity: 0.6; cursor: default; }
+
+.diagnosis-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: #6b7c8f;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.review-explain {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--gray);
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #3d4a56;
+}

@@ -1,6 +1,38 @@
 let currentTestId = null;
 let currentSessionCode = null;
+let currentSessionType = 'quiz'; // 'quiz' | 'lab'
 let socket = null;
+
+// ---------- ВКЛАДКИ ----------
+
+function switchTab(tab) {
+  document.getElementById('tab-btn-tests').classList.toggle('active', tab === 'tests');
+  document.getElementById('tab-btn-labs').classList.toggle('active', tab === 'labs');
+  document.getElementById('tab-tests').style.display = tab === 'tests' ? 'block' : 'none';
+  document.getElementById('tab-labs').style.display = tab === 'labs' ? 'block' : 'none';
+  if (tab === 'labs') showLabsList();
+}
+
+async function showLabsList() {
+  const res = await fetch('/api/labs');
+  const labs = await res.json();
+  const container = document.getElementById('labs-list');
+  if (labs.length === 0) {
+    container.innerHTML = '<p class="muted">Тренажёров пока нет.</p>';
+    return;
+  }
+  container.innerHTML = labs.map(l => `
+    <div class="card row between">
+      <div>
+        <strong>${escapeHtml(l.title)}</strong>
+        <div class="muted">${l.faultCount} тип(ов) неисправностей, с вариациями показаний</div>
+      </div>
+      <div class="row">
+        <button class="btn small" onclick="startLabSession('${l.id}')">Начать сессию</button>
+      </div>
+    </div>
+  `).join('');
+}
 
 // ---------- НАВИГАЦИЯ ----------
 
@@ -17,21 +49,22 @@ async function showList() {
   const container = document.getElementById('tests-list');
   if (tests.length === 0) {
     container.innerHTML = '<p class="muted">Тестов пока нет — создайте первый.</p>';
-    return;
+  } else {
+    container.innerHTML = tests.map(t => `
+      <div class="card row between">
+        <div>
+          <strong>${escapeHtml(t.title)}</strong>
+          <div class="muted">${t.questions.length} вопрос(ов)</div>
+        </div>
+        <div class="row">
+          <button class="btn small" onclick="startSession('${t.id}')">Начать сессию</button>
+          <button class="btn outline small" onclick="editTest('${t.id}')">Изменить</button>
+          <button class="btn danger small" onclick="deleteTest('${t.id}')">Удалить</button>
+        </div>
+      </div>
+    `).join('');
   }
-  container.innerHTML = tests.map(t => `
-    <div class="card row between">
-      <div>
-        <strong>${escapeHtml(t.title)}</strong>
-        <div class="muted">${t.questions.length} вопрос(ов)</div>
-      </div>
-      <div class="row">
-        <button class="btn small" onclick="startSession('${t.id}')">Начать сессию</button>
-        <button class="btn outline small" onclick="editTest('${t.id}')">Изменить</button>
-        <button class="btn danger small" onclick="deleteTest('${t.id}')">Удалить</button>
-      </div>
-    </div>
-  `).join('');
+  if (document.getElementById('tab-btn-labs').classList.contains('active')) showLabsList();
 }
 
 // ---------- РЕДАКТОР ТЕСТА ----------
@@ -164,10 +197,22 @@ async function saveTest() {
 // ---------- СЕССИЯ ----------
 
 async function startSession(testId) {
+  currentSessionType = 'quiz';
   const res = await fetch('/api/sessions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ testId })
+  });
+  const data = await res.json();
+  openSession(data.session.code, data);
+}
+
+async function startLabSession(labId) {
+  currentSessionType = 'lab';
+  const res = await fetch('/api/lab-sessions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ labId })
   });
   const data = await res.json();
   openSession(data.session.code, data);
@@ -254,12 +299,14 @@ function upsertParticipantRow(p) {
 
 async function endSession() {
   if (!confirm('Завершить сессию? Ученики больше не смогут отправлять ответы.')) return;
-  await fetch('/api/sessions/' + currentSessionCode + '/end', { method: 'POST' });
+  const base = currentSessionType === 'lab' ? '/api/lab-sessions/' : '/api/sessions/';
+  await fetch(base + currentSessionCode + '/end', { method: 'POST' });
   setSessionEndedUI(true);
 }
 
 function exportResults() {
-  window.location.href = '/api/sessions/' + currentSessionCode + '/export';
+  const base = currentSessionType === 'lab' ? '/api/lab-sessions/' : '/api/sessions/';
+  window.location.href = base + currentSessionCode + '/export';
 }
 
 async function importFromExcel() {

@@ -197,3 +197,17 @@ th { color: #6b7c8f; font-weight: 600; }
 .center { text-align: center; }
 .muted { color: #6b7c8f; font-size: 14px; }
 .error { color: var(--red); font-size: 14px; margin-top: 8px; }
+
+.tabs { display: flex; gap: 8px; margin: 18px 0 6px; border-bottom: 1px solid var(--border); }
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 10px 4px;
+  margin-right: 18px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #6b7c8f;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+}
+.tab-btn.active { color: var(--navy); border-bottom-color: var(--orange); }

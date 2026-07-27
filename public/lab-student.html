@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Диагностический тренажёр</title>
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/lab.css">
+</head>
+<body>
+<div class="brand-header">
+  <div class="brand-mark">ERG</div>
+  <div class="brand-text">
+    <div class="brand-title">ERG Corporate University</div>
+    <div class="brand-subtitle">Академия ТОиР — Диагностический тренажёр</div>
+  </div>
+</div>
+<div class="container narrow" id="app">
+
+  <div id="screen-join" class="center">
+    <h1 id="join-title">Тренажёр</h1>
+    <p class="muted" id="join-intro"></p>
+    <div class="card">
+      <label>Введите ваше имя и фамилию</label>
+      <input type="text" id="student-name" placeholder="Иванов Иван">
+      <button class="btn" style="margin-top:16px;width:100%" onclick="joinLab()">Начать обход</button>
+      <div class="error" id="join-error"></div>
+    </div>
+  </div>
+
+  <div id="screen-lab" style="display:none">
+    <h1 id="lab-title"></h1>
+    <div class="q-nav" id="case-nav"></div>
+    <div id="cases-list"></div>
+    <button class="btn" style="width:100%" onclick="submitLab()">Отправить диагнозы</button>
+    <div class="error" id="submit-error"></div>
+  </div>
+
+  <div id="screen-result" style="display:none">
+    <h1 class="center">Обход завершён</h1>
+    <div class="card center">
+      <p class="muted">Верных диагнозов:</p>
+      <div class="code-big" id="result-score"></div>
+      <p id="result-percent" class="muted"></p>
+    </div>
+    <h2>Разбор случаев</h2>
+    <div id="review-list"></div>
+  </div>
+
+</div>
+<script src="/lab-student.js"></script>
+</body>
+</html>
