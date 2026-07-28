@@ -216,8 +216,10 @@ async function showStatsList() {
 }
 
 let statsChart = null;
+let currentStatsTestId = null;
 
 async function showTestStats(testId) {
+  currentStatsTestId = testId;
   const res = await fetch('/api/tests/' + testId + '/stats');
   const data = await res.json();
 
@@ -290,6 +292,12 @@ async function showTestStats(testId) {
       `;
     }).join('');
   }
+}
+
+async function clearTestHistory() {
+  if (!confirm('Удалить всю историю сессий по этому тесту? Данные участников будут потеряны.')) return;
+  await fetch('/api/tests/' + currentStatsTestId + '/sessions', { method: 'DELETE' });
+  showTestStats(currentStatsTestId);
 }
 
 function drawChart(canvas, labels, scores) {
@@ -515,7 +523,6 @@ async function saveLab() {
   });
   const data = await res.json();
   if (!res.ok) { errorEl.textContent = data.error || 'Не удалось сохранить тренажёр'; return; }
-
   showScreen('screen-list');
   switchTab('labs');
 }
