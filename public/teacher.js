@@ -6,11 +6,12 @@ let socket = null;
 // ---------- ВКЛАДКИ ----------
 
 function switchTab(tab) {
-  document.getElementById('tab-btn-tests').classList.toggle('active', tab === 'tests');
-  document.getElementById('tab-btn-labs').classList.toggle('active', tab === 'labs');
-  document.getElementById('tab-tests').style.display = tab === 'tests' ? 'block' : 'none';
-  document.getElementById('tab-labs').style.display = tab === 'labs' ? 'block' : 'none';
+  ['tests', 'labs', 'stats'].forEach(t => {
+    document.getElementById('tab-btn-' + t).classList.toggle('active', t === tab);
+    document.getElementById('tab-' + t).style.display = t === tab ? 'block' : 'none';
+  });
   if (tab === 'labs') showLabsList();
+  if (tab === 'stats') showStatsList();
 }
 
 async function showLabsList() {
@@ -39,7 +40,7 @@ async function showLabsList() {
 // ---------- НАВИГАЦИЯ ----------
 
 function showScreen(id) {
-  ['screen-list', 'screen-editor', 'screen-lab-editor', 'screen-session'].forEach(s => {
+  ['screen-list', 'screen-editor', 'screen-lab-editor', 'screen-session', 'screen-stats'].forEach(s => {
     document.getElementById(s).style.display = (s === id) ? 'block' : 'none';
   });
 }
@@ -60,6 +61,7 @@ async function showList() {
         </div>
         <div class="row">
           <button class="btn small" onclick="startSession('${t.id}')">Начать сессию</button>
+          <button class="btn outline small" onclick="showTestStats('${t.id}')">История</button>
           <button class="btn outline small" onclick="editTest('${t.id}')">Изменить</button>
           <button class="btn danger small" onclick="deleteTest('${t.id}')">Удалить</button>
         </div>
@@ -67,6 +69,7 @@ async function showList() {
     `).join('');
   }
   if (document.getElementById('tab-btn-labs').classList.contains('active')) showLabsList();
+  if (document.getElementById('tab-btn-stats').classList.contains('active')) showStatsList();
 }
 
 // ---------- РЕДАКТОР ТЕСТА ----------
@@ -189,6 +192,160 @@ async function saveTest() {
   });
   if (!res.ok) { errorEl.textContent = 'Не удалось сохранить тест'; return; }
   showList();
+}
+
+// ---------- СТАТИСТИКА ----------
+
+async function showStatsList() {
+  const res = await fetch('/api/tests');
+  const tests = await res.json();
+  const container = document.getElementById('stats-tests-list');
+  if (tests.length === 0) {
+    container.innerHTML = '<p class="muted">Тестов пока нет.</p>';
+    return;
+  }
+  container.innerHTML = tests.map(t => `
+    <div class="card row between">
+      <div>
+        <strong>${escapeHtml(t.title)}</strong>
+        <div class="muted">${t.questions.length} вопрос(ов)</div>
+      </div>
+      <button class="btn outline small" onclick="showTestStats('${t.id}')">Смотреть статистику</button>
+    </div>
+  `).join('');
+}
+
+let statsChart = null;
+
+async function showTestStats(testId) {
+  const res = await fetch('/api/tests/' + testId + '/stats');
+  const data = await res.json();
+
+  document.getElementById('stats-test-title').textContent = data.test.title;
+  showScreen('screen-stats');
+
+  const tbody = document.getElementById('stats-sessions-body');
+  const noSessions = document.getElementById('stats-no-sessions');
+  if (data.sessionStats.length === 0) {
+    tbody.innerHTML = '';
+    noSessions.style.display = 'block';
+  } else {
+    noSessions.style.display = 'none';
+    tbody.innerHTML = data.sessionStats.map(s => {
+      const date = new Date(s.startedAt).toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      const avg = s.avgScore !== null ? s.avgScore + '%' : '—';
+      const avgColor = s.avgScore === null ? '' : s.avgScore >= 80 ? 'color:#2e9e4f' : s.avgScore >= 60 ? 'color:#b26a00' : 'color:#d64545';
+      return `<tr>
+        <td>${date}</td>
+        <td>${s.totalParticipants}</td>
+        <td>${s.finishedParticipants}</td>
+        <td style="font-weight:700;${avgColor}">${avg}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  const chartEl = document.getElementById('stats-chart');
+  const chartEmpty = document.getElementById('stats-chart-empty');
+  const chartSessions = data.sessionStats.filter(s => s.avgScore !== null);
+
+  if (statsChart) { statsChart.destroy(); statsChart = null; }
+
+  if (chartSessions.length < 2) {
+    chartEl.style.display = 'none';
+    chartEmpty.style.display = 'block';
+  } else {
+    chartEl.style.display = 'block';
+    chartEmpty.style.display = 'none';
+    const labels = chartSessions.map(s => {
+      const d = new Date(s.startedAt);
+      return `${d.getDate()}.${String(d.getMonth()+1).padStart(2,'0')}`;
+    });
+    const scores = chartSessions.map(s => s.avgScore);
+    drawChart(chartEl, labels, scores);
+  }
+
+  const qContainer = document.getElementById('stats-questions-list');
+  const withData = data.questionStats.filter(q => q.total > 0);
+  if (withData.length === 0) {
+    qContainer.innerHTML = '<p class="muted">Ещё нет данных по вопросам.</p>';
+  } else {
+    qContainer.innerHTML = withData.map(q => {
+      const rate = q.errorRate;
+      const color = rate >= 50 ? '#d64545' : rate >= 25 ? '#b26a00' : '#2e9e4f';
+      const bg = rate >= 50 ? '#fdeaea' : rate >= 25 ? '#fff3e0' : '#e6f4ea';
+      return `
+        <div class="card" style="margin-bottom:10px">
+          <div class="row between">
+            <div style="flex:1;font-size:14px">${escapeHtml(q.text)}</div>
+            <div style="flex-shrink:0;margin-left:16px;text-align:center">
+              <div style="background:${bg};color:${color};font-weight:700;font-size:18px;padding:6px 14px;border-radius:8px">${rate}%</div>
+              <div class="muted" style="font-size:11px;margin-top:2px">ошибок</div>
+            </div>
+          </div>
+          <div style="margin-top:8px;background:#eee;border-radius:4px;overflow:hidden;height:6px">
+            <div style="width:${rate}%;height:6px;background:${color};border-radius:4px"></div>
+          </div>
+          <div class="muted" style="font-size:12px;margin-top:4px">${q.total - q.correct} из ${q.total} ответов неверны</div>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+function drawChart(canvas, labels, scores) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 600;
+  const H = canvas.offsetHeight || 160;
+  canvas.width = W;
+  canvas.height = H;
+
+  const pad = { top: 20, right: 20, bottom: 30, left: 40 };
+  const w = W - pad.left - pad.right;
+  const h = H - pad.top - pad.bottom;
+
+  ctx.clearRect(0, 0, W, H);
+
+  ctx.strokeStyle = '#e0e0e0';
+  ctx.lineWidth = 1;
+  [0, 25, 50, 75, 100].forEach(v => {
+    const y = pad.top + h - (v / 100) * h;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(pad.left + w, y);
+    ctx.stroke();
+    ctx.fillStyle = '#999';
+    ctx.font = '11px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillText(v + '%', pad.left - 4, y + 4);
+  });
+
+  const step = w / (scores.length - 1);
+  ctx.beginPath();
+  ctx.strokeStyle = '#F07C00';
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+  scores.forEach((s, i) => {
+    const x = pad.left + i * step;
+    const y = pad.top + h - (s / 100) * h;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  scores.forEach((s, i) => {
+    const x = pad.left + i * step;
+    const y = pad.top + h - (s / 100) * h;
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#F07C00';
+    ctx.fill();
+    ctx.fillStyle = '#2C3E50';
+    ctx.font = 'bold 11px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(s + '%', x, y - 10);
+    ctx.fillStyle = '#999';
+    ctx.font = '11px Arial';
+    ctx.fillText(labels[i], x, pad.top + h + 18);
+  });
 }
 
 // ---------- РЕДАКТОР ТРЕНАЖЁРА ----------
