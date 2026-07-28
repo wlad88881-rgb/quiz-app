@@ -1,6 +1,6 @@
 let currentTestId = null;
 let currentSessionCode = null;
-let currentSessionType = 'quiz'; // 'quiz' | 'lab'
+let currentSessionType = 'quiz';
 let socket = null;
 
 // ---------- ВКЛАДКИ ----------
@@ -29,6 +29,8 @@ async function showLabsList() {
       </div>
       <div class="row">
         <button class="btn small" onclick="startLabSession('${l.id}')">Начать сессию</button>
+        <button class="btn outline small" onclick="editLab('${l.id}')">Изменить</button>
+        <button class="btn danger small" onclick="deleteLab('${l.id}')">Удалить</button>
       </div>
     </div>
   `).join('');
@@ -37,7 +39,7 @@ async function showLabsList() {
 // ---------- НАВИГАЦИЯ ----------
 
 function showScreen(id) {
-  ['screen-list', 'screen-editor', 'screen-session'].forEach(s => {
+  ['screen-list', 'screen-editor', 'screen-lab-editor', 'screen-session'].forEach(s => {
     document.getElementById(s).style.display = (s === id) ? 'block' : 'none';
   });
 }
@@ -174,12 +176,7 @@ async function saveTest() {
       errorEl.textContent = 'Каждый вопрос должен иметь текст, минимум 2 варианта и хотя бы один правильный ответ';
       return;
     }
-    questions.push({
-      text,
-      options,
-      multi,
-      correct: multi ? correctIdxs : correctIdxs[0]
-    });
+    questions.push({ text, options, multi, correct: multi ? correctIdxs : correctIdxs[0] });
   }
 
   const payload = { title, questions };
@@ -192,6 +189,178 @@ async function saveTest() {
   });
   if (!res.ok) { errorEl.textContent = 'Не удалось сохранить тест'; return; }
   showList();
+}
+
+// ---------- РЕДАКТОР ТРЕНАЖЁРА ----------
+
+let currentLabId = null;
+let labFaultCounter = 0;
+
+const SOUND_TYPES = [
+  { value: 'grinding', label: 'Скрежет (шум с потрескиванием)' },
+  { value: 'squeal', label: 'Визг/свист (высокая частота)' },
+  { value: 'clicking', label: 'Щелчки/стук (периодические импульсы)' },
+  { value: 'hum_axial', label: 'Гул с пульсацией (осевой, 2-я гармоника)' },
+  { value: 'hum_smooth', label: 'Ровный гул (без модуляции)' }
+];
+
+function showLabEditor() {
+  currentLabId = null;
+  document.getElementById('lab-editor-title').textContent = 'Новый тренажёр';
+  document.getElementById('lab-title-input').value = '';
+  document.getElementById('lab-intro-input').value = '';
+  document.getElementById('faults-container').innerHTML = '';
+  document.getElementById('lab-save-error').textContent = '';
+  addFault();
+  showScreen('screen-lab-editor');
+}
+
+async function editLab(id) {
+  const res = await fetch('/api/labs/' + id);
+  const lab = await res.json();
+  currentLabId = id;
+  document.getElementById('lab-editor-title').textContent = 'Редактирование тренажёра';
+  document.getElementById('lab-title-input').value = lab.title;
+  document.getElementById('lab-intro-input').value = lab.intro || '';
+  document.getElementById('faults-container').innerHTML = '';
+  lab.faults.forEach(f => addFault(f));
+  document.getElementById('lab-save-error').textContent = '';
+  showScreen('screen-lab-editor');
+}
+
+async function deleteLab(id) {
+  if (!confirm('Удалить этот тренажёр?')) return;
+  await fetch('/api/labs/' + id, { method: 'DELETE' });
+  showLabsList();
+}
+
+function addFault(existing) {
+  labFaultCounter++;
+  const fid = 'labf' + labFaultCounter;
+  const wrap = document.createElement('div');
+  wrap.className = 'question-block';
+  wrap.id = fid;
+  wrap.innerHTML = `
+    <div class="row between">
+      <label style="margin-top:0">Неисправность (диагноз)</label>
+      <button class="btn outline small" onclick="document.getElementById('${fid}').remove()">Удалить неисправность</button>
+    </div>
+    <input type="text" class="fault-label" value="${existing ? escapeAttr(existing.label) : ''}" placeholder="Например: Недостаток смазки">
+    <label>Объяснение (что увидит ученик после ответа)</label>
+    <textarea class="fault-explain" rows="3" placeholder="Почему именно эти признаки указывают на этот дефект...">${existing ? escapeHtml(existing.explain) : ''}</textarea>
+    <label>Вариации показаний</label>
+    <div class="variations-container" id="${fid}-vars"></div>
+    <button class="btn outline small" style="margin-top:8px" onclick="addVariation('${fid}')">+ Вариация показаний</button>
+  `;
+  document.getElementById('faults-container').appendChild(wrap);
+
+  if (existing && existing.variations && existing.variations.length) {
+    existing.variations.forEach(v => addVariation(fid, v));
+  } else {
+    addVariation(fid);
+  }
+}
+
+function addVariation(fid, existing) {
+  const container = document.getElementById(fid + '-vars');
+  const vid = fid + '_v' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+  const soundOptions = SOUND_TYPES.map(s =>
+    `<option value="${s.value}" ${existing && existing.sound && existing.sound.type === s.value ? 'selected' : ''}>${s.label}</option>`
+  ).join('');
+
+  const div = document.createElement('div');
+  div.className = 'variation-block';
+  div.id = vid;
+  div.innerHTML = `
+    <div class="row between">
+      <label style="margin-top:0">Вариация</label>
+      <button class="btn outline small" onclick="document.getElementById('${vid}').remove()">✕</button>
+    </div>
+    <input type="text" class="v-title" value="${existing ? escapeAttr(existing.title) : ''}" placeholder="Название узла, например: Узел № 14 — опорный подшипник">
+    <div class="row" style="gap:10px;align-items:flex-start">
+      <div style="flex:1">
+        <label>Вибрация — значение</label>
+        <input type="text" class="v-vib-value" value="${existing ? escapeAttr(existing.vibration.value) : ''}" placeholder="8.2 мм/с">
+      </div>
+      <div style="flex:2">
+        <label>Вибрация — описание</label>
+        <input type="text" class="v-vib-desc" value="${existing ? escapeAttr(existing.vibration.desc) : ''}" placeholder="широкополосный рост уровня...">
+      </div>
+    </div>
+    <div class="row" style="gap:10px;align-items:flex-start">
+      <div style="flex:1">
+        <label>Температура — значение</label>
+        <input type="text" class="v-temp-value" value="${existing ? escapeAttr(existing.temp.value) : ''}" placeholder="+6 °C">
+      </div>
+      <div style="flex:2">
+        <label>Температура — описание</label>
+        <input type="text" class="v-temp-desc" value="${existing ? escapeAttr(existing.temp.desc) : ''}" placeholder="незначительно выше нормы">
+      </div>
+    </div>
+    <label>Тип звука</label>
+    <select class="v-sound-type">${soundOptions}</select>
+    <label>Описание звука (текстом, что услышит ученик)</label>
+    <input type="text" class="v-sound-desc" value="${existing ? escapeAttr(existing.sound.desc) : ''}" placeholder="скрежещущий, с потрескиванием">
+  `;
+  container.appendChild(div);
+}
+
+async function saveLab() {
+  const title = document.getElementById('lab-title-input').value.trim();
+  const intro = document.getElementById('lab-intro-input').value.trim();
+  const errorEl = document.getElementById('lab-save-error');
+  errorEl.textContent = '';
+
+  if (!title) { errorEl.textContent = 'Введите название тренажёра'; return; }
+
+  const faultBlocks = document.querySelectorAll('#faults-container > .question-block');
+  if (faultBlocks.length === 0) { errorEl.textContent = 'Добавьте хотя бы одну неисправность'; return; }
+
+  const faults = [];
+  for (const fb of faultBlocks) {
+    const label = fb.querySelector('.fault-label').value.trim();
+    const explain = fb.querySelector('.fault-explain').value.trim();
+    const varBlocks = fb.querySelectorAll('.variation-block');
+    if (!label || !explain || varBlocks.length === 0) {
+      errorEl.textContent = 'Заполните диагноз, объяснение и хотя бы одну вариацию для каждой неисправности';
+      return;
+    }
+    const variations = [];
+    for (const vb of varBlocks) {
+      const vTitle = vb.querySelector('.v-title').value.trim();
+      const vibValue = vb.querySelector('.v-vib-value').value.trim();
+      const vibDesc = vb.querySelector('.v-vib-desc').value.trim();
+      const tempValue = vb.querySelector('.v-temp-value').value.trim();
+      const tempDesc = vb.querySelector('.v-temp-desc').value.trim();
+      const soundType = vb.querySelector('.v-sound-type').value;
+      const soundDesc = vb.querySelector('.v-sound-desc').value.trim();
+      if (!vTitle || !vibValue || !tempValue) {
+        errorEl.textContent = 'Заполните название узла, значение вибрации и температуры в каждой вариации';
+        return;
+      }
+      variations.push({
+        title: vTitle,
+        vibration: { value: vibValue, desc: vibDesc },
+        temp: { value: tempValue, desc: tempDesc },
+        sound: { type: soundType, desc: soundDesc }
+      });
+    }
+    faults.push({ label, explain, variations });
+  }
+
+  const payload = { title, intro, faults };
+  const url = currentLabId ? '/api/labs/' + currentLabId : '/api/labs';
+  const method = currentLabId ? 'PUT' : 'POST';
+  const res = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if (!res.ok) { errorEl.textContent = data.error || 'Не удалось сохранить тренажёр'; return; }
+
+  showScreen('screen-list');
+  switchTab('labs');
 }
 
 // ---------- СЕССИЯ ----------
@@ -228,16 +397,11 @@ async function openSession(code, createData) {
   document.getElementById('session-link').textContent = createData ? createData.url : window.location.origin + '/s/' + code;
   if (createData) {
     document.getElementById('qr-img').src = createData.qrDataUrl;
-  } else {
-    // восстановление QR по коду
-    const ip = window.location.hostname;
-    document.getElementById('qr-img').src = ''; // не критично при повторном открытии
   }
 
   setSessionEndedUI(session.ended);
   renderParticipants(session.participants || {});
   showScreen('screen-session');
-
   connectSocket(code);
 }
 
@@ -259,15 +423,9 @@ function connectSocket(code) {
   if (socket) socket.disconnect();
   socket = io();
   socket.emit('teacher:watch', code);
-  socket.on('participant:joined', (p) => {
-    upsertParticipantRow(p);
-  });
-  socket.on('participant:finished', (p) => {
-    upsertParticipantRow(p);
-  });
-  socket.on('session:ended', () => {
-    setSessionEndedUI(true);
-  });
+  socket.on('participant:joined', (p) => { upsertParticipantRow(p); });
+  socket.on('participant:finished', (p) => { upsertParticipantRow(p); });
+  socket.on('session:ended', () => { setSessionEndedUI(true); });
 }
 
 const participantRows = {};
@@ -335,7 +493,7 @@ async function importFromExcel() {
 
     let msg = `Импортировано вопросов: ${data.questions.length}`;
     if (data.skipped && data.skipped.length > 0) {
-      msg += `. Пропущено строк: ${data.skipped.length} (проверьте формат — скачайте шаблон для примера)`;
+      msg += `. Пропущено строк: ${data.skipped.length}`;
     }
     statusEl.textContent = msg;
     statusEl.className = 'muted';
