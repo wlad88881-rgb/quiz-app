@@ -1,26 +1,4 @@
-app.get('/api/tests/:id/stats', (req, res) => {
-  const data = db.load();
-  const test = data.tests[req.params.id];
-  if (!test) return res.status(404).json({ error: 'Тест не найден' });
 
-  const sessions = Object.values(data.sessions)
-    .filter(s => s.testId === req.params.id && !s.type)
-    .sort((a, b) => a.startedAt - b.startedAt);
-
-  const sessionStats = sessions.map(s => {
-    const participants = Object.values(s.participants).filter(p => p.finished);
-    const count = participants.length;
-    const avgScore = count > 0
-      ? Math.round((participants.reduce((sum, p) => sum + (p.score / p.total * 100), 0) / count) * 10) / 10
-      : null;
-    return {
-      code: s.code,
-      startedAt: s.startedAt,
-      ended: s.ended,
-      totalParticipants: Object.keys(s.participants).length,
-      finishedParticipants: count,
-      avgScore
-    };
   });
 
   const questionStats = test.questions.map(q => {
