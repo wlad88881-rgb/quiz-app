@@ -16,7 +16,6 @@
 </div>
 <div class="container" id="app">
 
-  <!-- ЭКРАН: СПИСОК ТЕСТОВ И ТРЕНАЖЁРОВ -->
   <div id="screen-list">
     <h1>Тестирование учеников</h1>
     <p class="subtitle">Создавайте тесты, запускайте диагностические тренажёры и сессии с QR-кодом</p>
@@ -33,13 +32,13 @@
     </div>
 
     <div id="tab-labs" style="display:none">
+      <button class="btn" onclick="showLabEditor()">+ Новый тренажёр</button>
       <h2>Диагностические тренажёры</h2>
       <p class="muted">Ученик получает показания приборов и звук неисправности, ставит диагноз — вместо выбора ответа на текстовый вопрос.</p>
       <div id="labs-list"></div>
     </div>
   </div>
 
-  <!-- ЭКРАН: РЕДАКТОР ТЕСТА -->
   <div id="screen-editor" style="display:none">
     <button class="btn outline small" onclick="showList()">&larr; Назад к списку</button>
     <h1 id="editor-title">Новый тест</h1>
@@ -65,7 +64,21 @@
     <span id="save-error" class="error"></span>
   </div>
 
-  <!-- ЭКРАН: СЕССИЯ (QR + ЖИВЫЕ РЕЗУЛЬТАТЫ) -->
+  <div id="screen-lab-editor" style="display:none">
+    <button class="btn outline small" onclick="showList()">&larr; Назад к списку</button>
+    <h1 id="lab-editor-title">Новый тренажёр</h1>
+    <div class="card">
+      <label>Название тренажёра</label>
+      <input type="text" id="lab-title-input" placeholder="Например: Диагностика редукторов">
+      <label>Вступление (что видит ученик перед началом)</label>
+      <input type="text" id="lab-intro-input" placeholder="Краткое описание задания">
+      <div id="faults-container"></div>
+      <button class="btn outline" style="margin-top:16px" onclick="addFault()">+ Добавить неисправность</button>
+    </div>
+    <button class="btn" onclick="saveLab()">Сохранить тренажёр</button>
+    <span id="lab-save-error" class="error"></span>
+  </div>
+
   <div id="screen-session" style="display:none">
     <button class="btn outline small" onclick="showList()">&larr; Назад к списку</button>
     <h1 id="session-title"></h1>
