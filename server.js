@@ -399,7 +399,16 @@ function caseForClient(lab, assignment) {
   };
 }
 
-app.get('/api/labs', (req, res) => {
+app.delete('/api/tests/:id/sessions', async (req, res) => {
+  await db.update((d) => {
+    Object.keys(d.sessions).forEach(code => {
+      if (d.sessions[code].testId === req.params.id && !d.sessions[code].type) {
+        delete d.sessions[code];
+      }
+    });
+  });
+  res.json({ ok: true });
+});app.get('/api/labs', (req, res) => {
   const data = db.load();
   const list = Object.values(data.labs).map(l => ({
     id: l.id,
