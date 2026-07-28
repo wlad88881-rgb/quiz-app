@@ -46,9 +46,10 @@
     </div>
   </div>
 
-  <div id="screen-stats" style="display:none">
-    <button class="btn outline small" onclick="showList(); switchTab('stats')">&larr; Назад к статистике</button>
-    <h1 id="stats-test-title"></h1>
+  <div class="row between" style="margin-bottom:16px">
+      <button class="btn outline small" onclick="showList(); switchTab('stats')">&larr; Назад к статистике</button>
+      <button class="btn danger small" onclick="clearTestHistory()">Очистить историю</button>
+    </div>
 
     <h2>История сессий</h2>
     <div class="card">
