@@ -256,9 +256,6 @@ app.get('/api/sessions/:code/quiz', (req, res) => {
     })),
     timeLimit: session.timeLimit // <--- ДОБАВЛЕНА ЭТА СТРОКА
   });
-  });
-});
-
 app.post('/api/sessions/:code/join', async (req, res) => {
   const { name } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: 'Введите имя' });
@@ -670,7 +667,6 @@ app.get('/api/lab-sessions/:code/export', (req, res) => {
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   res.send(buf);
 });
-
 app.get('/l/:code', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'lab-student.html'));
 });
@@ -708,3 +704,4 @@ async function start() {
 }
 
 start();
+
