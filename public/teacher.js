@@ -339,7 +339,14 @@ function setSessionEndedUI(ended) {
 }
 
 function connectSocket(code) {
-  if (socket) socket.disconnect();
+  if (socket) {
+    // Очищаем старые обработчики, чтобы события не дублировались
+    socket.off('participant:joined');
+    socket.off('participant:finished');
+    socket.off('session:ended');
+    socket.disconnect();
+  }
+  
   socket = io();
   socket.emit('teacher:watch', code);
   socket.on('participant:joined', (p) => { upsertParticipantRow(p); });
