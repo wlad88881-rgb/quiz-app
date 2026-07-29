@@ -4,180 +4,76 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Прохождение теста</title>
+  <!-- Подключаем общие стили -->
+  <link rel="stylesheet" href="/style.css">
   <style>
-    body { font-family: system-ui, sans-serif; background: #f5f7fa; margin: 0; padding: 20px; }
-    .container { max-width: 800px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
-    h1 { font-size: 24px; margin-top: 0; }
-    .timer-box { text-align: center; font-size: 20px; font-weight: 700; color: #2C3E50; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; margin-bottom: 20px; background: #fafafa; }
-    .timer-warning { color: #d64545; border-color: #d64545; background: #fdeaea; }
-    .question { margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
-    .question-text { font-weight: 600; margin-bottom: 10px; }
-    .options label { display: block; padding: 8px 12px; margin: 4px 0; background: #f8f9fa; border-radius: 6px; cursor: pointer; transition: 0.2s; }
-    .options label:hover { background: #e9ecef; }
-    .btn { padding: 10px 20px; background: #2C3E50; color: #fff; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
-    .btn:disabled { background: #a0a0a0; cursor: not-allowed; }
-    .btn:hover:not(:disabled) { background: #1a252f; }
-    #results { margin-top: 20px; display: none; }
-    #error-msg { color: #d64545; margin-top: 10px; display: none; }
+    /* Стили для таймера, если они не попали в style.css */
+    #timer {
+      display: none;
+      align-items: center;
+      gap: 16px;
+      background: #fff;
+      padding: 14px 24px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-bottom: 24px;
+      border: 1px solid #e0e0e0;
+    }
+    #timer .timer-icon { font-size: 22px; }
+    #timer .timer-time { font-weight: 700; font-size: 24px; min-width: 60px; color: #2C3E50; font-variant-numeric: tabular-nums; }
+    #timer .timer-track { flex: 1; height: 6px; background: #eee; border-radius: 4px; overflow: hidden; }
+    #timer .timer-bar { height: 100%; background: #2e9e4f; width: 100%; border-radius: 4px; transition: width 0.3s ease; }
+    #timer.timer-urgent .timer-time { color: #d64545; }
+    .timer-notice { display: none; background: #fdeaea; color: #d64545; padding: 12px 16px; border-radius: 8px; font-weight: 600; margin-bottom: 20px; border: 1px solid #d64545; }
   </style>
 </head>
 <body>
+
 <div class="container">
-  <div id="join-screen">
-    <h1>Вход в тестирование</h1>
-    <input type="text" id="student-name" placeholder="Введите ваше имя" style="width:100%;padding:10px;margin-bottom:10px;border:1px solid #ccc;border-radius:6px;font-size:16px;">
-    <button class="btn" onclick="joinSession()">Присоединиться</button>
-    <div id="join-error" style="color:#d64545;margin-top:10px;"></div>
+  <!-- Экран входа -->
+  <div id="screen-join">
+    <h1 id="join-title">Загрузка...</h1>
+    <div id="join-error" class="error"></div>
+    <input type="text" id="student-name" placeholder="Введите ваше имя">
+    <button class="btn" onclick="joinTest()">Присоединиться</button>
   </div>
 
-  <div id="quiz-screen" style="display:none;">
+  <!-- Экран теста -->
+  <div id="screen-quiz" style="display:none;">
     <h1 id="quiz-title"></h1>
-    <div id="timer-container" class="timer-box" style="display:none;">
-      ⏱️ Осталось времени: <span id="timer-display">--:--</span>
-    </div>
-    <div id="questions-container"></div>
-    <button class="btn" onclick="submitTest()" id="submit-btn">Завершить тест</button>
-    <div id="error-msg"></div>
 
-    <div id="results">
-      <h2>Результаты</h2>
-      <p>Ваш результат: <strong id="result-score">0</strong> из <strong id="result-total">0</strong></p>
-      <div id="result-details"></div>
+    <!-- Блок таймера -->
+    <div id="timer">
+      <div class="timer-icon">⏱️</div>
+      <div class="timer-time">00:00</div>
+      <div class="timer-track"><div class="timer-bar" id="timer-bar"></div></div>
     </div>
+    <div id="timer-notice" class="timer-notice">⏰ Время вышло! Результат отправлен автоматически.</div>
+
+    <!-- Панель навигации по вопросам -->
+    <div id="q-nav" class="q-nav"></div>
+    
+    <!-- Список вопросов -->
+    <div id="questions-list"></div>
+
+    <div id="submit-error" class="error" style="margin-top:10px;"></div>
+    <button class="btn" onclick="submitQuiz()" id="submit-btn">Завершить тест</button>
+  </div>
+
+  <!-- Экран результатов -->
+  <div id="screen-result" style="display:none;">
+    <h1>Результаты</h1>
+    <p style="font-size:24px; font-weight:700;">
+      <span id="result-score">0</span> / <span id="result-total">0</span>
+      (<span id="result-percent">0%</span>)
+    </p>
+    <div id="review-list"></div>
+    <button class="btn outline" onclick="location.reload()">Вернуться к началу</button>
   </div>
 </div>
 
-<script>
-  const code = window.location.pathname.split('/').pop();
-  let participantId = null;
-  let timerInterval = null;
+<!-- ПОДКЛЮЧАЕМ ВАШ ПРАВИЛЬНЫЙ JS-ФАЙЛ -->
+<script src="/student.js"></script>
 
-  async function joinSession() {
-    const name = document.getElementById('student-name').value.trim();
-    if (!name) { document.getElementById('join-error').textContent = 'Введите имя!'; return; }
-    document.getElementById('join-error').textContent = '';
-
-    const res = await fetch('/api/sessions/' + code + '/join', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name })
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      document.getElementById('join-error').textContent = err.error || 'Ошибка входа';
-      return;
-    }
-    const data = await res.json();
-    participantId = data.participantId;
-    document.getElementById('join-screen').style.display = 'none';
-    document.getElementById('quiz-screen').style.display = 'block';
-    loadQuiz();
-  }
-
-  async function loadQuiz() {
-    const res = await fetch('/api/sessions/' + code + '/quiz');
-    if (!res.ok) {
-      document.getElementById('questions-container').innerHTML = '<p style="color:#d64545">Ошибка загрузки теста.</p>';
-      return;
-    }
-    const data = await res.json();
-    document.getElementById('quiz-title').textContent = data.testTitle;
-
-    // ЛОГИКА ЗАПУСКА ТАЙМЕРА
-    if (data.timeLimit && data.timeLimit > 0) {
-      startTimer(data.timeLimit * 60);
-      document.getElementById('timer-container').style.display = 'block';
-    }
-
-    const container = document.getElementById('questions-container');
-    container.innerHTML = data.questions.map((q, i) => `
-      <div class="question">
-        <div class="question-text">${i+1}. ${escapeHtml(q.text)}</div>
-        <div class="options" data-qid="${q.id}" data-multi="${q.multi}">
-          ${q.options.map((opt, oi) => `
-            <label>
-              <input type="${q.multi ? 'checkbox' : 'radio'}" name="q_${q.id}" value="${oi}">
-              ${escapeHtml(opt)}
-            </label>
-          `).join('')}
-        </div>
-      </div>
-    `).join('');
-  }
-
-  function startTimer(seconds) {
-    const display = document.getElementById('timer-display');
-    const timerBox = document.getElementById('timer-container');
-    let remaining = seconds;
-
-    function updateTimer() {
-      const mins = Math.floor(remaining / 60);
-      const secs = remaining % 60;
-      display.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-      if (remaining <= 60) timerBox.classList.add('timer-warning');
-    }
-
-    updateTimer();
-    timerInterval = setInterval(() => {
-      remaining--;
-      updateTimer();
-      if (remaining <= 0) {
-        clearInterval(timerInterval);
-        alert('Время вышло! Тест автоматически завершен.');
-        submitTest();
-      }
-    }, 1000);
-  }
-
-  function getAnswers() {
-    const answers = {};
-    document.querySelectorAll('.question').forEach(qBlock => {
-      const options = qBlock.querySelector('.options');
-      const qId = options.dataset.qid;
-      const isMulti = options.dataset.multi === 'true';
-      const inputs = options.querySelectorAll('input');
-      if (isMulti) {
-        const vals = [];
-        inputs.forEach(inp => { if (inp.checked) vals.push(parseInt(inp.value)); });
-        answers[qId] = vals;
-      } else {
-        inputs.forEach(inp => { if (inp.checked) answers[qId] = parseInt(inp.value); });
-      }
-    });
-    return answers;
-  }
-
-  async function submitTest() {
-    clearInterval(timerInterval);
-    document.getElementById('submit-btn').disabled = true;
-    document.getElementById('error-msg').style.display = 'none';
-
-    const answers = getAnswers();
-    const res = await fetch('/api/sessions/' + code + '/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ participantId, answers })
-    });
-    if (!res.ok) {
-      document.getElementById('submit-btn').disabled = false;
-      const err = await res.json();
-      document.getElementById('error-msg').textContent = err.error || 'Ошибка отправки';
-      document.getElementById('error-msg').style.display = 'block';
-      return;
-    }
-    const result = await res.json();
-    document.getElementById('questions-container').style.display = 'none';
-    document.getElementById('submit-btn').style.display = 'none';
-    document.getElementById('timer-container').style.display = 'none';
-
-    document.getElementById('results').style.display = 'block';
-    document.getElementById('result-score').textContent = result.score;
-    document.getElementById('result-total').textContent = result.total;
-  }
-
-  function escapeHtml(s) {
-    return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-</script>
 </body>
 </html>
