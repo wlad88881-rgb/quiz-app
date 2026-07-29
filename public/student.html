@@ -30,6 +30,14 @@
 <body>
 
 <div class="container">
+  <!-- Шапка для ученика с переключателем языка -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+    <div style="font-weight: 700; color: #2C3E50;">ERG Тестирование</div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button onclick="setLang('ru')" style="background: none; border: 1px solid #2C3E50; color: #2C3E50; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;">RU</button>
+      <button onclick="setLang('kz')" style="background: none; border: 1px solid #2C3E50; color: #2C3E50; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;">KZ</button>
+    </div>
+  </div>
   <!-- Экран входа -->
   <div id="screen-join">
     <h1 id="join-title">Загрузка...</h1>
@@ -75,5 +83,36 @@
 <!-- ПОДКЛЮЧАЕМ ВАШ ПРАВИЛЬНЫЙ JS-ФАЙЛ -->
 <script src="/student.js"></script>
 
-</body>
+<script src="/translations.js"></script>
+<script>
+  // Функция обновления текста на странице ученика
+  function applyTranslations() {
+    // Кнопки и заголовки на экране входа
+    document.getElementById('btn-join').textContent = t('studentJoin');
+    document.getElementById('student-name').placeholder = t('studentEnterName');
+    
+    // Кнопка завершения теста
+    const submitBtn = document.getElementById('btn-submit');
+    if (submitBtn) submitBtn.textContent = t('btnSubmit');
+    
+    // Таймер и заголовки результатов
+    const notice = document.getElementById('timer-notice');
+    if (notice) notice.textContent = t('timerEnded');
+    
+    const resultsTitle = document.getElementById('lbl-results');
+    if (resultsTitle) resultsTitle.textContent = t('studentResults');
+    
+    const restartBtn = document.getElementById('btn-restart');
+    if (restartBtn) restartBtn.textContent = t('btnBack');
+  }
+
+  // Переопределяем setLang, чтобы обновлять текст
+  window.setLang = function(lang) {
+    currentLang = lang;
+    applyTranslations();
+  };
+
+  // Применяем переводы при загрузке страницы
+  document.addEventListener('DOMContentLoaded', applyTranslations);
+</script></body>
 </html>
