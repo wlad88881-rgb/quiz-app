@@ -91,7 +91,7 @@
     document.getElementById('btn-join').textContent = t('studentJoin');
     document.getElementById('student-name').placeholder = t('studentEnterName');
     
-    // Кнопка завершения теста
+    // Кнопка завершения теста (защита от ошибки, если кнопки ещё нет на экране)
     const submitBtn = document.getElementById('btn-submit');
     if (submitBtn) submitBtn.textContent = t('btnSubmit');
     
