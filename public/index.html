@@ -14,7 +14,11 @@
   <div class="brand-text">
     <div class="brand-title">ERG Corporate University</div>
     <div class="brand-subtitle">Управление тестированием</div>
-  </div>
+  </div>    <!-- Переключатель языка -->
+    <div style="margin-left: auto; display: flex; gap: 8px; align-items: center;">
+      <button onclick="setLang('ru')" style="background: none; border: 1px solid white; color: white; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;">RU</button>
+      <button onclick="setLang('kz')" style="background: none; border: 1px solid white; color: white; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;">KZ</button>
+    </div>
 </header>
 
 <div class="container">
@@ -144,5 +148,5 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/teacher.js"></script>
-</body>
+<script src="/translations.js"></script></body>
 </html>
