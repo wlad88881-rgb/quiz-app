@@ -246,14 +246,16 @@ app.get('/api/sessions/:code/quiz', (req, res) => {
   if (session.ended) return res.status(410).json({ error: 'Тестирование завершено' });
   const test = data.tests[session.testId];
   if (!test) return res.status(404).json({ error: 'Тест не найден' });
-  res.json({
+    res.json({
     testTitle: test.title,
     questions: test.questions.map(q => ({
       id: q.id,
       text: q.text,
       options: q.options,
       multi: q.multi
-    }))
+    })),
+    timeLimit: session.timeLimit // <--- ДОБАВЛЕНА ЭТА СТРОКА
+  });
   });
 });
 
