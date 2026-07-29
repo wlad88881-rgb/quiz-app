@@ -22,6 +22,10 @@ function switchTab(tab) {
     document.getElementById('tab-btn-' + t).classList.toggle('active', t === tab);
     document.getElementById('tab-' + t).style.display = t === tab ? 'block' : 'none';
   });
+  // Если мы на экране сессии, при переключении вкладок выходим из сессии в список
+  if (document.getElementById('screen-session').style.display === 'block') {
+    showList();
+  }
   if (tab === 'labs') showLabsList();
   if (tab === 'stats') showStatsList();
 }
