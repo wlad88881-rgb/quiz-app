@@ -40,11 +40,6 @@ function checkAdminAuth(req, res, next) {
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-Вы сделали Шаг 1 (вставили настройку пароля и функцию проверки).
-
-Теперь, пожалуйста, напишите мне «Вставил», и я дам вам следующие 2 коротких шага (они будут в самом конце server.js и в index.html), чтобы завершить защиту. Вы почти у цели!
-
-
 
 function getLocalIp() {
   const ifaces = os.networkInterfaces();
