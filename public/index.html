@@ -22,7 +22,14 @@
 </header>
 
 <div class="container">
-  <!-- Вкладки -->
+   <!-- Экран входа в панель преподавателя -->
+  <div id="login-screen" class="card" style="max-width: 400px; margin: 0 auto 20px auto; text-align: center;">
+    <h2>Вход в панель управления</h2>
+    <p class="muted">Введите пароль для доступа</p>
+    <input type="password" id="admin-password" placeholder="Введите пароль" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px;">
+    <button class="btn" onclick="loginAdmin()" style="width: 100%;">Войти</button>
+    <div id="login-error" class="error" style="display: none; margin-top: 10px;">Неверный пароль</div>
+  </div><!-- Вкладки -->
   <div class="tabs">
     <button class="tab-btn active" id="tab-btn-tests" onclick="switchTab('tests')">📚 <span id="lbl-tests">Тесты</span></button>
     <button class="tab-btn" id="tab-btn-labs" onclick="switchTab('labs')">🧪 <span id="lbl-labs">Тренажёры</span></button>
@@ -186,4 +193,43 @@
   
   // Применяем переводы при загрузке страницы
   document.addEventListener('DOMContentLoaded', applyTranslations);
+</script><script>
+  // Функция входа
+  async function loginAdmin() {
+    const pass = document.getElementById('admin-password').value.trim();
+    const errorEl = document.getElementById('login-error');
+    errorEl.style.display = 'none';
+    
+    if (!pass) return;
+
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pass })
+    });
+
+    if (res.ok) {
+      // Если пароль верный — сохраняем метку и перезагружаем
+      localStorage.setItem('adminAuth', 'ok');
+      location.reload();
+    } else {
+      errorEl.style.display = 'block';
+    }
+  }
+
+  // При загрузке страницы проверяем, есть ли сохранённая метка
+  document.addEventListener('DOMContentLoaded', async () => {
+    const isAuth = localStorage.getItem('adminAuth');
+    
+    if (isAuth === 'ok') {
+      // Если авторизован — скрываем вход и показываем панель
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('screen-main').style.display = 'block';
+      // Загружаем список тестов
+      if (typeof loadTestsList === 'function') loadTestsList();
+    } else {
+      document.getElementById('login-screen').style.display = 'block';
+      document.getElementById('screen-main').style.display = 'none';
+    }
+  });
 </script></html>
