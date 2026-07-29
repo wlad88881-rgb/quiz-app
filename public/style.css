@@ -205,3 +205,58 @@ th { color: #6b7c8f; font-weight: 600; }
   margin-top: 10px;
   background: white;
 }
+/* ---------- ТАЙМЕР ДЛЯ УЧЕНИКА ---------- */
+#timer {
+  display: none;
+  align-items: center;
+  gap: 16px;
+  background: #fff;
+  padding: 14px 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-bottom: 24px;
+  border: 1px solid #e0e0e0;
+}
+
+#timer .timer-icon {
+  font-size: 22px;
+}
+
+#timer .timer-time {
+  font-weight: 700;
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+  min-width: 60px;
+  color: #2C3E50;
+}
+
+#timer .timer-track {
+  flex: 1;
+  height: 6px;
+  background: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+#timer .timer-bar {
+  height: 100%;
+  background: #2e9e4f;
+  width: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+#timer.timer-urgent .timer-time {
+  color: #d64545;
+}
+
+.timer-notice {
+  display: none;
+  background: #fdeaea;
+  color: #d64545;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  border: 1px solid #d64545;
+}
