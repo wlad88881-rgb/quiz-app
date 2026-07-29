@@ -1162,6 +1162,25 @@ app.get('/api/lab-sessions/:code/export', (req, res) => {
   res.send(buf);
 });
 
+// === АВТОРИЗАЦИЯ ===
+app.post('/api/login', (req, res) => {
+  const { password } = req.body;
+  if (password === ADMIN_PASSWORD) {
+    res.json({ ok: true });
+  } else {
+    res.status(401).json({ error: 'Неверный пароль' });
+  }
+});
+
+app.get('/api/check-auth', (req, res) => {
+  if (req.headers['x-admin-auth'] === 'ok') {
+    res.json({ ok: true });
+  } else {
+    res.status(401).json({ error: 'Не авторизован' });
+  }
+});
+
+// === СТРАНИЦЫ И ЗАПУСК ===
 app.get('/l/:code', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'lab-student.html'));
 });
