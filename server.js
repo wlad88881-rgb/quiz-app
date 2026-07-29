@@ -255,22 +255,30 @@ app.get('/api/sessions/:code', (req, res) => {
 });
 
 // ==================== ЗАГРУЗКА ТЕСТА (с поддержкой языка) ====================
-app.get('/api/sessions/:code/quiz', (req, res) => {
+aapp.get('/api/sessions/:code/quiz', (req, res) => {
   const data = db.load();
   const session = data.sessions[req.params.code];
   if (!session) return res.status(404).json({ error: 'Сессия не найдена' });
   if (session.ended) return res.status(410).json({ error: 'Тестирование завершено' });
   
-  // ВСТАВИТЬ ЭТУ СТРОКУ СЮДА
+  // Считываем язык из запроса
   const lang = req.query.lang || 'ru';
   
+  // ОТЛАДКА: Смотрим в логи, что приходит
+  console.log(`[DEBUG] Запрос языка: ${lang}, Ищем ID: ${session.testId}`);
+  
   let test;
-  if (lang === 'kz') {
-    // Если выбран казахский — подгружаем из файла kz-tests.json
-    const kzTests = require('./kz-tests.json');
-    test = kzTests.find(t => t.id === session.testId);
-  } else {
-    // Если русский — подгружаем из основной базы
+  try {
+    if (lang === 'kz') {
+      // Загружаем казахские тесты
+      const kzTests = require('./kz-tests.json');
+      test = kzTests.find(t => t.id === session.testId);
+    } else {
+      test = data.tests[session.testId];
+    }
+  } catch (e) {
+    // Если файл kz-tests.json не найден или ошибка, падаем на русский
+    console.error('Ошибка загрузки kz-tests.json:', e.message);
     test = data.tests[session.testId];
   }
 
