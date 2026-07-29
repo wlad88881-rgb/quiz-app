@@ -44,9 +44,13 @@ async function joinTest() {
   sessionStorage.setItem('pid_' + sessionCode, participantId);
   renderQuiz();
 
-  if (quizData.timeLimit) {
+  // ===== ЗАПУСК ТАЙМЕРА =====
+  if (quizData.timeLimit && quizData.timeLimit > 0) {
     startTimer(quizData.timeLimit * 60);
+  } else {
+    document.getElementById('timer').style.display = 'none';
   }
+  // ==========================
 }
 
 function startTimer(seconds) {
@@ -54,6 +58,8 @@ function startTimer(seconds) {
   const timerEl = document.getElementById('timer');
   const timerBar = document.getElementById('timer-bar');
   const total = seconds;
+  
+  // Делаем таймер видимым
   timerEl.style.display = 'flex';
 
   function tick() {
@@ -76,6 +82,7 @@ function startTimer(seconds) {
       clearInterval(timerInterval);
       timerEnded = true;
       timerEl.querySelector('.timer-time').textContent = '00:00';
+      // Автоматическая сдача при истечении времени
       submitQuiz(true);
       return;
     }
@@ -137,6 +144,7 @@ function selectAnswer(qid, optionIdx, multi) {
 }
 
 async function submitQuiz(auto = false) {
+  // Если уже завершено по таймеру, не даем отправить повторно
   if (timerEnded && !auto) return;
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
 
