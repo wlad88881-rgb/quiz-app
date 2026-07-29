@@ -259,8 +259,22 @@ app.get('/api/sessions/:code/quiz', (req, res) => {
   const session = data.sessions[req.params.code];
   if (!session) return res.status(404).json({ error: 'Сессия не найдена' });
   if (session.ended) return res.status(410).json({ error: 'Тестирование завершено' });
-  const test = data.tests[session.testId];
+  
+  // Проверяем, какой язык выбрал пользователь
+  const lang = req.query.lang || 'ru';
+  
+  let test;
+  if (lang === 'kz') {
+    // Если выбран казахский — подгружаем из файла kz-tests.json
+    const kzTests = require('./kz-tests.json');
+    test = kzTests.find(t => t.id === session.testId);
+  } else {
+    // Если русский — подгружаем из основной базы
+    test = data.tests[session.testId];
+  }
+
   if (!test) return res.status(404).json({ error: 'Тест не найден' });
+
   res.json({
     testTitle: test.title,
     questions: test.questions.map(q => ({
