@@ -365,6 +365,7 @@ function upsertParticipantRow(p) {
   const status = p.finished ? '<span class="badge live">Завершил</span>' : '<span class="badge" style="background:#fff3e0;color:#b26a00">Проходит</span>';
   const score = p.finished ? `${p.score} / ${p.total}` : '—';
   row.innerHTML = `<td>${escapeHtml(p.name)}</td><td>${status}</td><td>${score}</td>`;
+  document.getElementById('results-table').style.display = 'table';
 }
 
 async function endSession() {
