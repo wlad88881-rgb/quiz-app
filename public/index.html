@@ -60,25 +60,25 @@
   <!-- Редактор теста -->
   <div id="screen-editor" style="display:none;">
     <div class="row between" style="margin-bottom:16px;">
-      <h2 id="editor-title" style="margin:0;">Новый тест</h2>
-      <button class="btn outline small" onclick="showList()">Отмена</button>
+      <h2 id="editor-title" style="margin:0;"><span id="lbl-editor-title">Новый тест</span></h2>
+      <button class="btn outline small" onclick="showList()"><span id="lbl-cancel">Отмена</span></button>
     </div>
     <input type="text" id="test-title" placeholder="Название теста">
     <div id="questions-container"></div>
-    <button class="btn" onclick="saveTest()" style="margin-top:12px;">Сохранить тест</button>
+    <button class="btn" onclick="saveTest()" style="margin-top:12px;"><span id="lbl-save-test">Сохранить тест</span></button>
     <div id="save-error" class="error"></div>
   </div>
 
   <!-- Редактор тренажёра -->
   <div id="screen-lab-editor" style="display:none;">
     <div class="row between" style="margin-bottom:16px;">
-      <h2 id="lab-editor-title" style="margin:0;">Новый тренажёр</h2>
-      <button class="btn outline small" onclick="showList(); switchTab('labs')">Отмена</button>
+      <h2 id="lab-editor-title" style="margin:0;"><span id="lbl-lab-editor-title">Новый тренажёр</span></h2>
+      <button class="btn outline small" onclick="showList(); switchTab('labs')"><span id="lbl-cancel">Отмена</span></button>
     </div>
     <input type="text" id="lab-title-input" placeholder="Название тренажёра">
     <textarea id="lab-intro-input" rows="3" placeholder="Вводный текст для ученика"></textarea>
     <div id="faults-container"></div>
-    <button class="btn" onclick="saveLab()" style="margin-top:12px;">Сохранить тренажёр</button>
+    <button class="btn" onclick="saveLab()" style="margin-top:12px;"><span id="lbl-save-lab">Сохранить тренажёр</span></button>
     <div id="lab-save-error" class="error"></div>
   </div>
 
@@ -128,12 +128,13 @@
   <!-- Экран статистики -->
     <div id="screen-stats" style="display:none;">
     <div class="row between" style="margin-bottom:16px;">
-      <h2 id="stats-test-title" style="margin:0;">Статистика</h2>
+      <h2 id="stats-test-title" style="margin:0;"><span id="lbl-stats-test-title">Статистика</span></h2>
       <div class="row">
-        <button class="btn outline small" onclick="showList(); switchTab('stats')">← Назад</button>
-        <button class="btn danger small" onclick="clearTestHistory()" id="clear-history-btn">Очистить историю</button>
+        <button class="btn outline small" onclick="showList(); switchTab('stats')"><span id="lbl-back">← Назад</span></button>
+        <button class="btn danger small" onclick="clearTestHistory()" id="clear-history-btn"><span id="lbl-clear-history">Очистить историю</span></button>
       </div>
     </div>
+    <!-- Остальной код статистики оставляем без изменений -->
     <h3>Сессии</h3>
     <div id="stats-no-sessions" class="muted" style="display:none;padding:20px;">По этому тесту ещё нет завершённых сессий.</div>
     <table id="stats-sessions-table">
@@ -152,7 +153,7 @@
 <script src="/translations.js"></script></body>
 <script>
   // Функция обновления текста в HTML после смены языка
-  function applyTranslations() {
+ function applyTranslations() {
     document.getElementById('lbl-tests').textContent = t('testsTab');
     document.getElementById('lbl-labs').textContent = t('labsTab');
     document.getElementById('lbl-stats').textContent = t('statsTab');
@@ -163,6 +164,18 @@
     document.getElementById('lbl-new-lab').textContent = t('btnNewTest');
     document.getElementById('lbl-my-labs').textContent = t('myLabs');
     document.getElementById('lbl-stats-title').textContent = t('statsTab');
+    
+    // Новые переводы для редакторов и статистики
+    document.getElementById('lbl-editor-title').textContent = t('newTest');
+    document.getElementById('lbl-cancel').textContent = t('btnBack');
+    document.getElementById('lbl-save-test').textContent = t('btnSaveTest');
+    
+    document.getElementById('lbl-lab-editor-title').textContent = t('newLab');
+    document.getElementById('lbl-save-lab').textContent = t('btnSaveLab');
+    
+    document.getElementById('lbl-stats-test-title').textContent = t('statsTab');
+    document.getElementById('lbl-back').textContent = t('btnBack');
+    document.getElementById('lbl-clear-history').textContent = t('btnClearHistory');
   }
 
   // Переопределяем setLang, чтобы она обновляла текст без перезагрузки
