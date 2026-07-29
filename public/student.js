@@ -2,6 +2,8 @@ const sessionCode = window.location.pathname.split('/s/')[1];
 let quizData = null;
 let participantId = null;
 const answers = {};
+let timerInterval = null;
+let timerEnded = false;
 
 async function init() {
   try {
@@ -41,6 +43,47 @@ async function joinTest() {
   participantId = data.participantId;
   sessionStorage.setItem('pid_' + sessionCode, participantId);
   renderQuiz();
+
+  if (quizData.timeLimit) {
+    startTimer(quizData.timeLimit * 60);
+  }
+}
+
+function startTimer(seconds) {
+  let remaining = seconds;
+  const timerEl = document.getElementById('timer');
+  const timerBar = document.getElementById('timer-bar');
+  const total = seconds;
+  timerEl.style.display = 'flex';
+
+  function tick() {
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    timerEl.querySelector('.timer-time').textContent =
+      String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+
+    const pct = (remaining / total) * 100;
+    timerBar.style.width = pct + '%';
+    timerBar.style.background = remaining <= 60 ? '#d64545' : remaining <= total * 0.25 ? '#b26a00' : '#2e9e4f';
+
+    if (remaining <= 60) {
+      timerEl.classList.add('timer-urgent');
+    } else {
+      timerEl.classList.remove('timer-urgent');
+    }
+
+    if (remaining <= 0) {
+      clearInterval(timerInterval);
+      timerEnded = true;
+      timerEl.querySelector('.timer-time').textContent = '00:00';
+      submitQuiz(true);
+      return;
+    }
+    remaining--;
+  }
+
+  tick();
+  timerInterval = setInterval(tick, 1000);
 }
 
 function renderQuiz() {
@@ -82,7 +125,6 @@ function selectAnswer(qid, optionIdx, multi) {
     answers[qid] = optionIdx;
   }
 
-  // подсветка выбранного
   document.querySelectorAll(`[id^="choice-${qid}-"]`).forEach(el => el.classList.remove('selected'));
   const selectedIdxs = multi ? answers[qid] : [answers[qid]];
   selectedIdxs.forEach(i => {
@@ -94,14 +136,19 @@ function selectAnswer(qid, optionIdx, multi) {
   document.getElementById(`nav-${qid}`).classList.toggle('answered', hasAnswer);
 }
 
-async function submitQuiz() {
+async function submitQuiz(auto = false) {
+  if (timerEnded && !auto) return;
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+
   const errorEl = document.getElementById('submit-error');
-  const unanswered = quizData.questions.filter(q => {
-    const a = answers[q.id];
-    return q.multi ? (!a || a.length === 0) : a === undefined;
-  });
-  if (unanswered.length > 0) {
-    errorEl.textContent = `Осталось без ответа вопросов: ${unanswered.length}. Отправить всё равно можно.`;
+  if (!auto) {
+    const unanswered = quizData.questions.filter(q => {
+      const a = answers[q.id];
+      return q.multi ? (!a || a.length === 0) : a === undefined;
+    });
+    if (unanswered.length > 0) {
+      errorEl.textContent = `Осталось без ответа вопросов: ${unanswered.length}. Отправить всё равно можно.`;
+    }
   }
 
   const res = await fetch(`/api/sessions/${sessionCode}/submit`, {
@@ -110,12 +157,17 @@ async function submitQuiz() {
     body: JSON.stringify({ participantId, answers })
   });
   const data = await res.json();
-  if (!res.ok) { errorEl.textContent = data.error || 'Ошибка отправки'; return; }
+  if (!res.ok) { if (errorEl) errorEl.textContent = data.error || 'Ошибка отправки'; return; }
 
   document.getElementById('screen-quiz').style.display = 'none';
   document.getElementById('screen-result').style.display = 'block';
   document.getElementById('result-score').textContent = `${data.score} / ${data.total}`;
   document.getElementById('result-percent').textContent = Math.round((data.score / data.total) * 100) + '%';
+
+  if (auto) {
+    const notice = document.getElementById('timer-notice');
+    if (notice) notice.style.display = 'block';
+  }
 
   renderReview(data.review);
 }
