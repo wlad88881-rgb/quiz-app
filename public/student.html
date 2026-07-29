@@ -125,8 +125,10 @@ function applyTranslations() {
 window.setLang = function(lang) {
   currentLang = lang;
   applyTranslations();
-  // Перезагружаем страницу, чтобы язык обновился у тестов
-  location.reload();
+  // Добавляем параметр языка в адресную строку и перезагружаем
+  const url = new URL(window.location);
+  url.searchParams.set('lang', lang);
+  window.location.href = url.toString();
 };
 
 // ==================== ЛОГИКА УЧЕНИКА ====================
