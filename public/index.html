@@ -14,22 +14,25 @@
   <div class="brand-text">
     <div class="brand-title">ERG Corporate University</div>
     <div class="brand-subtitle">Управление тестированием</div>
-  </div>    <!-- Переключатель языка -->
-    <div style="margin-left: auto; display: flex; gap: 8px; align-items: center;">
-      <button onclick="setLang('ru')" style="background: none; border: 1px solid white; color: white; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;">RU</button>
-      <button onclick="setLang('kz')" style="background: none; border: 1px solid white; color: white; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;">KZ</button>
-    </div>
+  </div>
+  <!-- Переключатель языка в шапке -->
+  <div style="margin-left: auto; display: flex; gap: 8px; align-items: center;">
+    <button onclick="setLang('ru')" style="background: none; border: 1px solid white; color: white; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;">RU</button>
+    <button onclick="setLang('kz')" style="background: none; border: 1px solid white; color: white; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;">KZ</button>
+  </div>
 </header>
 
 <div class="container">
-   <!-- Экран входа в панель преподавателя -->
+  <!-- Экран входа в панель преподавателя -->
   <div id="login-screen" class="card" style="max-width: 400px; margin: 0 auto 20px auto; text-align: center;">
     <h2>Вход в панель управления</h2>
     <p class="muted">Введите пароль для доступа</p>
     <input type="password" id="admin-password" placeholder="Введите пароль" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px;">
     <button class="btn" onclick="loginAdmin()" style="width: 100%;">Войти</button>
     <div id="login-error" class="error" style="display: none; margin-top: 10px;">Неверный пароль</div>
-  </div><!-- Вкладки -->
+  </div>
+
+  <!-- Вкладки -->
   <div class="tabs">
     <button class="tab-btn active" id="tab-btn-tests" onclick="switchTab('tests')">📚 <span id="lbl-tests">Тесты</span></button>
     <button class="tab-btn" id="tab-btn-labs" onclick="switchTab('labs')">🧪 <span id="lbl-labs">Тренажёры</span></button>
@@ -37,7 +40,6 @@
   </div>
 
   <!-- Основной экран -->
-    <!-- Основной экран -->
   <div id="screen-main">
     <div id="tab-tests" style="display:block">
       <div class="row" style="margin-bottom:16px; gap:12px; flex-wrap:wrap;">
@@ -89,7 +91,7 @@
     <div id="lab-save-error" class="error"></div>
   </div>
 
-  <!-- Экран сессии (Здесь появятся кнопка назад и ученики) -->
+  <!-- Экран сессии -->
   <div id="screen-session" style="display:none;">
     <div class="row between" style="margin-bottom:16px;">
       <div class="row">
@@ -118,7 +120,7 @@
       </div>
     </div>
 
-    <!-- ТАБЛИЦА УЧЕНИКОВ (ВОТ ЗДЕСЬ ОНА ПОЯВИТСЯ) -->
+    <!-- Таблица учеников -->
     <div id="no-participants" class="muted" style="text-align:center;padding:40px;">Пока никто не присоединился.</div>
     <table id="results-table" style="display:none; margin-top:20px;">
       <thead>
@@ -133,7 +135,7 @@
   </div>
 
   <!-- Экран статистики -->
-    <div id="screen-stats" style="display:none;">
+  <div id="screen-stats" style="display:none;">
     <div class="row between" style="margin-bottom:16px;">
       <h2 id="stats-test-title" style="margin:0;"><span id="lbl-stats-test-title">Статистика</span></h2>
       <div class="row">
@@ -141,7 +143,6 @@
         <button class="btn danger small" onclick="clearTestHistory()" id="clear-history-btn"><span id="lbl-clear-history">Очистить историю</span></button>
       </div>
     </div>
-    <!-- Остальной код статистики оставляем без изменений -->
     <h3>Сессии</h3>
     <div id="stats-no-sessions" class="muted" style="display:none;padding:20px;">По этому тесту ещё нет завершённых сессий.</div>
     <table id="stats-sessions-table">
@@ -154,13 +155,58 @@
     <h3>Вопросы</h3>
     <div id="stats-questions-list"></div>
   </div>
+</div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/teacher.js"></script>
-<script src="/translations.js"></script></body>
+
+<!-- Переводы и логика входа -->
 <script>
-  // Функция обновления текста в HTML после смены языка
- function applyTranslations() {
+  const translations = {
+    ru: {
+      testsTab: 'Тесты',
+      labsTab: 'Тренажёры',
+      statsTab: 'Статистика',
+      btnNewTest: '+ Новый тест',
+      btnImportExcel: 'Импорт Excel',
+      btnTemplate: 'Шаблон Excel',
+      myTests: 'Мои тесты',
+      myLabs: 'Мои тренажёры',
+      statsTitle: 'Статистика',
+      newTest: 'Новый тест',
+      btnCancel: 'Отмена',
+      btnSaveTest: 'Сохранить тест',
+      newLab: 'Новый тренажёр',
+      btnSaveLab: 'Сохранить тренажёр',
+      statsTestTitle: 'Статистика',
+      btnBack: '← Назад',
+      btnClearHistory: 'Очистить историю'
+    },
+    kz: {
+      testsTab: 'Тесттер',
+      labsTab: 'Жаттықтырғыштар',
+      statsTab: 'Статистика',
+      btnNewTest: '+ Жаңа тест',
+      btnImportExcel: 'Excel-ден импорттау',
+      btnTemplate: 'Excel үлгісі',
+      myTests: 'Менің тесттерім',
+      myLabs: 'Менің жаттықтырғыштарым',
+      statsTitle: 'Статистика',
+      newTest: 'Жаңа тест',
+      btnCancel: 'Болдырмау',
+      btnSaveTest: 'Тестті сақтау',
+      newLab: 'Жаңа жаттықтырғыш',
+      btnSaveLab: 'Жаттықтырғышты сақтау',
+      statsTestTitle: 'Статистика',
+      btnBack: '← Артқа',
+      btnClearHistory: 'Тарихты тазарту'
+    }
+  };
+
+  let currentLang = 'ru';
+  function t(key) { return translations[currentLang][key] || key; }
+
+  function applyTranslations() {
     document.getElementById('lbl-tests').textContent = t('testsTab');
     document.getElementById('lbl-labs').textContent = t('labsTab');
     document.getElementById('lbl-stats').textContent = t('statsTab');
@@ -170,36 +216,32 @@
     document.getElementById('lbl-my-tests').textContent = t('myTests');
     document.getElementById('lbl-new-lab').textContent = t('btnNewTest');
     document.getElementById('lbl-my-labs').textContent = t('myLabs');
-    document.getElementById('lbl-stats-title').textContent = t('statsTab');
-    
-    // Новые переводы для редакторов и статистики
+    document.getElementById('lbl-stats-title').textContent = t('statsTitle');
     document.getElementById('lbl-editor-title').textContent = t('newTest');
-    document.getElementById('lbl-cancel').textContent = t('btnBack');
+    document.getElementById('lbl-cancel').textContent = t('btnCancel');
     document.getElementById('lbl-save-test').textContent = t('btnSaveTest');
-    
     document.getElementById('lbl-lab-editor-title').textContent = t('newLab');
     document.getElementById('lbl-save-lab').textContent = t('btnSaveLab');
-    
-    document.getElementById('lbl-stats-test-title').textContent = t('statsTab');
+    document.getElementById('lbl-stats-test-title').textContent = t('statsTestTitle');
     document.getElementById('lbl-back').textContent = t('btnBack');
     document.getElementById('lbl-clear-history').textContent = t('btnClearHistory');
   }
 
-  // Переопределяем setLang, чтобы она обновляла текст без перезагрузки
   window.setLang = function(lang) {
     currentLang = lang;
     applyTranslations();
+    const url = new URL(window.location);
+    url.searchParams.set('lang', lang);
+    window.history.replaceState({}, '', url.toString());
   };
-  
-  // Применяем переводы при загрузке страницы
+
   document.addEventListener('DOMContentLoaded', applyTranslations);
-</script><script>
-  // Функция входа
+
+  // ЛОГИКА ВХОДА
   async function loginAdmin() {
     const pass = document.getElementById('admin-password').value.trim();
     const errorEl = document.getElementById('login-error');
     errorEl.style.display = 'none';
-    
     if (!pass) return;
 
     const res = await fetch('/api/login', {
@@ -209,7 +251,6 @@
     });
 
     if (res.ok) {
-      // Если пароль верный — сохраняем метку и перезагружаем
       localStorage.setItem('adminAuth', 'ok');
       location.reload();
     } else {
@@ -217,19 +258,17 @@
     }
   }
 
-  // При загрузке страницы проверяем, есть ли сохранённая метка
   document.addEventListener('DOMContentLoaded', async () => {
     const isAuth = localStorage.getItem('adminAuth');
-    
     if (isAuth === 'ok') {
-      // Если авторизован — скрываем вход и показываем панель
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('screen-main').style.display = 'block';
-      // Загружаем список тестов
       if (typeof loadTestsList === 'function') loadTestsList();
     } else {
       document.getElementById('login-screen').style.display = 'block';
       document.getElementById('screen-main').style.display = 'none';
     }
   });
-</script></html>
+</script>
+</body>
+</html>
