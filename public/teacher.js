@@ -352,6 +352,9 @@ function renderParticipants(participants) {
   document.getElementById('results-body').innerHTML = '';
   Object.keys(participantRows).forEach(k => delete participantRows[k]);
   Object.values(participants).sort((a, b) => a.joinedAt - b.joinedAt).forEach(p => upsertParticipantRow(p));
+  
+  // Включаем отображение таблицы, если есть участники
+  document.getElementById('results-table').style.display = Object.keys(participants).length > 0 ? 'table' : 'none';
 }
 
 function upsertParticipantRow(p) {
