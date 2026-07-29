@@ -80,7 +80,7 @@ app.get('/api/tests/:id', (req, res) => {
   res.json(test);
 });
 
-app.post('/api/tests', async (req, res) => {
+app.post('/api/tests', checkAdminAuth, async (req, res) => {
   const { title, questions } = req.body;
   if (!title || !Array.isArray(questions) || questions.length === 0) {
     return res.status(400).json({ error: 'Нужны название и хотя бы один вопрос' });
@@ -102,7 +102,7 @@ app.post('/api/tests', async (req, res) => {
   res.json(test);
 });
 
-app.put('/api/tests/:id', async (req, res) => {
+app.put('/api/tests/:id', checkAdminAuth, async (req, res) => {
   const { title, questions } = req.body;
   const result = await db.update((data) => {
     const test = data.tests[req.params.id];
@@ -121,7 +121,7 @@ app.put('/api/tests/:id', async (req, res) => {
   res.json(result);
 });
 
-app.delete('/api/tests/:id', async (req, res) => {
+app.delete('/api/tests/:id', checkAdminAuth, async (req, res) => {
   await db.update((data) => { delete data.tests[req.params.id]; });
   res.json({ ok: true });
 });
