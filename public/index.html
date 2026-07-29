@@ -24,34 +24,35 @@
 <div class="container">
   <!-- Вкладки -->
   <div class="tabs">
-    <button class="tab-btn active" id="tab-btn-tests" onclick="switchTab('tests')">📚 Тесты</button>
-    <button class="tab-btn" id="tab-btn-labs" onclick="switchTab('labs')">🧪 Тренажёры</button>
-    <button class="tab-btn" id="tab-btn-stats" onclick="switchTab('stats')">📊 Статистика</button>
+    <button class="tab-btn active" id="tab-btn-tests" onclick="switchTab('tests')">📚 <span id="lbl-tests">Тесты</span></button>
+    <button class="tab-btn" id="tab-btn-labs" onclick="switchTab('labs')">🧪 <span id="lbl-labs">Тренажёры</span></button>
+    <button class="tab-btn" id="tab-btn-stats" onclick="switchTab('stats')">📊 <span id="lbl-stats">Статистика</span></button>
   </div>
 
   <!-- Основной экран -->
+    <!-- Основной экран -->
   <div id="screen-main">
     <div id="tab-tests" style="display:block">
       <div class="row" style="margin-bottom:16px; gap:12px; flex-wrap:wrap;">
-        <button class="btn" onclick="showEditor()">+ Новый тест</button>
+        <button class="btn" onclick="showEditor()"><span id="lbl-new-test">+ Новый тест</span></button>
         <input type="file" id="import-file" accept=".xlsx,.xls" style="display:none;" onchange="importFromExcel()">
-        <button class="btn outline" onclick="document.getElementById('import-file').click()">Импорт Excel</button>
-        <button class="btn outline" onclick="window.location.href='/api/import-template'">Шаблон Excel</button>
+        <button class="btn outline" onclick="document.getElementById('import-file').click()"><span id="lbl-import-excel">Импорт Excel</span></button>
+        <button class="btn outline" onclick="window.location.href='/api/import-template'"><span id="lbl-template">Шаблон Excel</span></button>
       </div>
-      <h2>Мои тесты</h2>
+      <h2><span id="lbl-my-tests">Мои тесты</span></h2>
       <div id="tests-list"></div>
     </div>
 
     <div id="tab-labs" style="display:none">
       <div class="row" style="margin-bottom:16px;">
-        <button class="btn" onclick="showLabEditor()">+ Новый тренажёр</button>
+        <button class="btn" onclick="showLabEditor()"><span id="lbl-new-lab">+ Новый тренажёр</span></button>
       </div>
-      <h2>Мои тренажёры</h2>
+      <h2><span id="lbl-my-labs">Мои тренажёры</span></h2>
       <div id="labs-list"></div>
     </div>
 
     <div id="tab-stats" style="display:none">
-      <h2>Статистика</h2>
+      <h2><span id="lbl-stats-title">Статистика</span></h2>
       <div id="stats-tests-list"></div>
     </div>
   </div>
@@ -149,4 +150,27 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="/teacher.js"></script>
 <script src="/translations.js"></script></body>
-</html>
+<script>
+  // Функция обновления текста в HTML после смены языка
+  function applyTranslations() {
+    document.getElementById('lbl-tests').textContent = t('testsTab');
+    document.getElementById('lbl-labs').textContent = t('labsTab');
+    document.getElementById('lbl-stats').textContent = t('statsTab');
+    document.getElementById('lbl-new-test').textContent = t('btnNewTest');
+    document.getElementById('lbl-import-excel').textContent = t('btnImportExcel');
+    document.getElementById('lbl-template').textContent = t('btnTemplate');
+    document.getElementById('lbl-my-tests').textContent = t('myTests');
+    document.getElementById('lbl-new-lab').textContent = t('btnNewTest');
+    document.getElementById('lbl-my-labs').textContent = t('myLabs');
+    document.getElementById('lbl-stats-title').textContent = t('statsTab');
+  }
+
+  // Переопределяем setLang, чтобы она обновляла текст без перезагрузки
+  window.setLang = function(lang) {
+    currentLang = lang;
+    applyTranslations();
+  };
+  
+  // Применяем переводы при загрузке страницы
+  document.addEventListener('DOMContentLoaded', applyTranslations);
+</script></html>
