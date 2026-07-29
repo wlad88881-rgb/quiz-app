@@ -1,216 +1,107 @@
-const sessionCode = window.location.pathname.split('/s/')[1];
-let quizData = null;
-let participantId = null;
-const answers = {};
-let timerInterval = null;
-let timerEnded = false;
-
-async function init() {
-  try {
-    const res = await fetch(`/api/sessions/${sessionCode}/quiz`);
-    if (!res.ok) {
-      const err = await res.json();
-      document.getElementById('join-title').textContent = t('errorLoad');
-      document.getElementById('join-error').textContent = err.error || t('errorLoad');
-      return;
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Прохождение теста</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    #timer {
+      display: none;
+      align-items: center;
+      gap: 16px;
+      background: #fff;
+      padding: 14px 24px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-bottom: 24px;
+      border: 1px solid #e0e0e0;
     }
-    quizData = await res.json();
-    document.getElementById('join-title').textContent = quizData.testTitle;
-
-    const savedPid = sessionStorage.getItem('pid_' + sessionCode);
-    if (savedPid) {
-      participantId = savedPid;
-    }
-  } catch (e) {
-    document.getElementById('join-error').textContent = t('errorLoad');
-  }
-}
-
-async function joinTest() {
-  const name = document.getElementById('student-name').value.trim();
-  const errorEl = document.getElementById('join-error');
-  errorEl.textContent = '';
-  if (!name) { errorEl.textContent = t('errorName'); return; }
-
-  const res = await fetch(`/api/sessions/${sessionCode}/join`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name })
-  });
-  const data = await res.json();
-  if (!res.ok) { errorEl.textContent = data.error || t('errorJoin'); return; }
-
-  participantId = data.participantId;
-  sessionStorage.setItem('pid_' + sessionCode, participantId);
-  renderQuiz();
-
-  if (quizData.timeLimit && quizData.timeLimit > 0) {
-    startTimer(quizData.timeLimit * 60);
-  } else {
-    document.getElementById('timer').style.display = 'none';
-  }
-}
-
-function startTimer(seconds) {
-  let remaining = seconds;
-  const timerEl = document.getElementById('timer');
-  const timerBar = document.getElementById('timer-bar');
-  const total = seconds;
-  timerEl.style.display = 'flex';
-
-  function tick() {
-    const m = Math.floor(remaining / 60);
-    const s = remaining % 60;
-    timerEl.querySelector('.timer-time').textContent =
-      String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-
-    const pct = (remaining / total) * 100;
-    timerBar.style.width = pct + '%';
-    timerBar.style.background = remaining <= 60 ? '#d64545' : remaining <= total * 0.25 ? '#b26a00' : '#2e9e4f';
-
-    if (remaining <= 60) timerEl.classList.add('timer-urgent');
-    else timerEl.classList.remove('timer-urgent');
-
-    if (remaining <= 0) {
-      clearInterval(timerInterval);
-      timerEnded = true;
-      timerEl.querySelector('.timer-time').textContent = '00:00';
-      submitQuiz(true);
-      return;
-    }
-    remaining--;
-  }
-
-  tick();
-  timerInterval = setInterval(tick, 1000);
-}
-
-function renderQuiz() {
-  document.getElementById('screen-join').style.display = 'none';
-  document.getElementById('screen-quiz').style.display = 'block';
-  document.getElementById('quiz-title').textContent = quizData.testTitle;
-  document.getElementById('btn-join').textContent = t('studentJoin');
-  document.getElementById('btn-submit').textContent = t('btnSubmit');
-  document.getElementById('timer-notice').textContent = t('timerEnded');
-
-  const nav = document.getElementById('q-nav');
-  nav.innerHTML = quizData.questions.map((q, i) => `<div id="nav-${q.id}">${i + 1}</div>`).join('');
-
-  const list = document.getElementById('questions-list');
-  list.innerHTML = quizData.questions.map((q, i) => `
-    <div class="card">
-      <strong>${i + 1}. ${escapeHtml(q.text)}</strong>
-      <div id="options-${q.id}">
-        ${q.options.map((opt, oi) => `
-          <label class="option-choice" id="choice-${q.id}-${oi}">
-            <input type="${q.multi ? 'checkbox' : 'radio'}" name="${q.id}" value="${oi}"
-              onchange="selectAnswer('${q.id}', ${oi}, ${q.multi})">
-            ${escapeHtml(opt)}
-          </label>
-        `).join('')}
-      </div>
+    #timer .timer-icon { font-size: 22px; }
+    #timer .timer-time { font-weight: 700; font-size: 24px; min-width: 60px; color: #2C3E50; font-variant-numeric: tabular-nums; }
+    #timer .timer-track { flex: 1; height: 6px; background: #eee; border-radius: 4px; overflow: hidden; }
+    #timer .timer-bar { height: 100%; background: #2e9e4f; width: 100%; border-radius: 4px; transition: width 0.3s ease; }
+    #timer.timer-urgent .timer-time { color: #d64545; }
+    .timer-notice { display: none; background: #fdeaea; color: #d64545; padding: 12px 16px; border-radius: 8px; font-weight: 600; margin-bottom: 20px; border: 1px solid #d64545; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <!-- Шапка с переключателем языка -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+    <div style="font-weight: 700; color: #2C3E50;">ERG Тестирование</div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button onclick="setLang('ru')" style="background: none; border: 1px solid #2C3E50; color: #2C3E50; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;">RU</button>
+      <button onclick="setLang('kz')" style="background: none; border: 1px solid #2C3E50; color: #2C3E50; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: 600;">KZ</button>
     </div>
-  `).join('');
-}
+  </div>
 
-function selectAnswer(qid, optionIdx, multi) {
-  if (multi) {
-    if (!answers[qid]) answers[qid] = [];
-    const idx = answers[qid].indexOf(optionIdx);
-    const checkbox = document.querySelector(`#choice-${qid}-${optionIdx} input`);
-    if (checkbox.checked) {
-      if (idx === -1) answers[qid].push(optionIdx);
-    } else {
-      if (idx !== -1) answers[qid].splice(idx, 1);
-    }
-  } else {
-    answers[qid] = optionIdx;
-  }
+  <!-- Экран входа -->
+  <div id="screen-join">
+    <h1 id="join-title">Загрузка...</h1>
+    <div id="join-error" class="error"></div>
+    <input type="text" id="student-name" placeholder="Введите ваше имя">
+    <button class="btn" id="btn-join" onclick="joinTest()">Присоединиться</button>
+  </div>
 
-  document.querySelectorAll(`[id^="choice-${qid}-"]`).forEach(el => el.classList.remove('selected'));
-  const selectedIdxs = multi ? answers[qid] : [answers[qid]];
-  selectedIdxs.forEach(i => {
-    const el = document.getElementById(`choice-${qid}-${i}`);
-    if (el) el.classList.add('selected');
-  });
+  <!-- Экран теста -->
+  <div id="screen-quiz" style="display:none;">
+    <h1 id="quiz-title"></h1>
+    <div id="timer">
+      <div class="timer-icon">⏱️</div>
+      <div class="timer-time">00:00</div>
+      <div class="timer-track"><div class="timer-bar" id="timer-bar"></div></div>
+    </div>
+    <div id="timer-notice" class="timer-notice">⏰ Время вышло! Результат отправлен автоматически.</div>
+    <div id="q-nav" class="q-nav"></div>
+    <div id="questions-list"></div>
+    <div id="submit-error" class="error" style="margin-top:10px;"></div>
+    <button class="btn" id="btn-submit" onclick="submitQuiz()">Завершить тест</button>
+  </div>
 
-  const hasAnswer = multi ? answers[qid].length > 0 : answers[qid] !== undefined;
-  document.getElementById(`nav-${qid}`).classList.toggle('answered', hasAnswer);
-}
+  <!-- Экран результатов -->
+  <div id="screen-result" style="display:none;">
+    <h1 id="lbl-results">Результаты</h1>
+    <p style="font-size:24px; font-weight:700;">
+      <span id="result-score">0</span> / <span id="result-total">0</span>
+      (<span id="result-percent">0%</span>)
+    </p>
+    <div id="review-list"></div>
+    <button class="btn outline" id="btn-restart" onclick="location.reload()">Вернуться к началу</button>
+  </div>
+</div>
 
-async function submitQuiz(auto = false) {
-  if (timerEnded && !auto) return;
-  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-
-  const errorEl = document.getElementById('submit-error');
-  if (!auto) {
-    const unanswered = quizData.questions.filter(q => {
-      const a = answers[q.id];
-      return q.multi ? (!a || a.length === 0) : a === undefined;
-    });
-    if (unanswered.length > 0) {
-      errorEl.textContent = `Осталось без ответа вопросов: ${unanswered.length}. Отправить всё равно можно.`;
-    }
-  }
-
-  const res = await fetch(`/api/sessions/${sessionCode}/submit`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ participantId, answers })
-  });
-  const data = await res.json();
-  if (!res.ok) { if (errorEl) errorEl.textContent = data.error || t('errorSave'); return; }
-
-  document.getElementById('screen-quiz').style.display = 'none';
-  document.getElementById('screen-result').style.display = 'block';
-  document.getElementById('result-score').textContent = `${data.score} / ${data.total}`;
-  document.getElementById('result-percent').textContent = Math.round((data.score / data.total) * 100) + '%';
-  document.getElementById('lbl-results').textContent = t('studentResults');
-  document.getElementById('btn-restart').textContent = t('btnBack');
-
-  if (auto) {
+<script src="/student.js"></script>
+<script src="/translations.js"></script>
+<script>
+  function applyTranslations() {
+    const joinBtn = document.getElementById('btn-join');
+    if (joinBtn) joinBtn.textContent = t('studentJoin');
+    
+    const nameInput = document.getElementById('student-name');
+    if (nameInput) nameInput.placeholder = t('studentEnterName');
+    
+    const submitBtn = document.getElementById('btn-submit');
+    if (submitBtn) submitBtn.textContent = t('btnSubmit');
+    
     const notice = document.getElementById('timer-notice');
-    if (notice) notice.style.display = 'block';
+    if (notice) notice.textContent = t('timerEnded');
+    
+    const resultsTitle = document.getElementById('lbl-results');
+    if (resultsTitle) resultsTitle.textContent = t('studentResults');
+    
+    const restartBtn = document.getElementById('btn-restart');
+    if (restartBtn) restartBtn.textContent = t('btnBack');
   }
 
-  renderReview(data.review);
-}
+  window.setLang = function(lang) {
+    currentLang = lang;
+    applyTranslations();
+    // Перезагружаем страницу, чтобы обновить язык у тестов
+    location.reload();
+  };
 
-function renderReview(review) {
-  const container = document.getElementById('review-list');
-  container.innerHTML = review.map((q, i) => {
-    const givenSet = q.multi ? (q.given || []) : (q.given !== undefined ? [q.given] : []);
-    const correctSet = q.multi ? q.correct : [q.correct];
-
-    const optionsHtml = q.options.map((opt, oi) => {
-      const isCorrectOpt = correctSet.includes(oi);
-      const wasGiven = givenSet.includes(oi);
-      let cls = 'review-option';
-      let mark = '';
-      if (isCorrectOpt) { cls += ' correct'; mark = '✓ '; }
-      if (wasGiven && !isCorrectOpt) { cls += ' wrong'; mark = '✕ '; }
-      if (wasGiven && isCorrectOpt) { mark = '✓ '; }
-      return `<div class="${cls}">${mark}${escapeHtml(opt)}</div>`;
-    }).join('');
-
-    const statusBadge = q.isCorrect
-      ? '<span class="badge live">' + t('studentCorrect') + '</span>'
-      : '<span class="badge" style="background:#fdeaea;color:#d64545">' + t('studentWrong') + '</span>';
-
-    return `
-      <div class="card">
-        <div class="row between">
-          <strong>${i + 1}. ${escapeHtml(q.text)}</strong>
-          ${statusBadge}
-        </div>
-        <div style="margin-top:10px">${optionsHtml}</div>
-      </div>
-    `;
-  }).join('');
-}
-
-function escapeHtml(s) {
-  return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-init();
+  document.addEventListener('DOMContentLoaded', applyTranslations);
+</script>
+</body>
+</html>
