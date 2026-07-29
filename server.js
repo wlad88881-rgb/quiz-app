@@ -255,7 +255,7 @@ app.get('/api/sessions/:code', (req, res) => {
 });
 
 // ==================== ЗАГРУЗКА ТЕСТА (с поддержкой языка) ====================
-aapp.get('/api/sessions/:code/quiz', (req, res) => {
+app.get('/api/sessions/:code/quiz', (req, res) => {
   const data = db.load();
   const session = data.sessions[req.params.code];
   if (!session) return res.status(404).json({ error: 'Сессия не найдена' });
