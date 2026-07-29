@@ -261,24 +261,22 @@ app.get('/api/sessions/:code/quiz', (req, res) => {
   if (!session) return res.status(404).json({ error: 'Сессия не найдена' });
   if (session.ended) return res.status(410).json({ error: 'Тестирование завершено' });
   
-  // Считываем язык из запроса
+  // Проверка языка из запроса
   const lang = req.query.lang || 'ru';
   
-  // ОТЛАДКА: Смотрим в логи, что приходит
-  console.log(`[DEBUG] Запрос языка: ${lang}, Ищем ID: ${session.testId}`);
+  // ОТЛАДКА В ЛОГАХ
+  console.log(`[DEBUG] Запрос языка: ${lang}, ID теста: ${session.testId}`);
   
   let test;
-  try {
-    if (lang === 'kz') {
-      // Загружаем казахские тесты
+  if (lang === 'kz') {
+    try {
       const kzTests = require('./kz-tests.json');
       test = kzTests.find(t => t.id === session.testId);
-    } else {
-      test = data.tests[session.testId];
+    } catch (e) {
+      console.error('Ошибка загрузки kz-tests.json');
+      test = null;
     }
-  } catch (e) {
-    // Если файл kz-tests.json не найден или ошибка, падаем на русский
-    console.error('Ошибка загрузки kz-tests.json:', e.message);
+  } else {
     test = data.tests[session.testId];
   }
 
@@ -295,6 +293,7 @@ app.get('/api/sessions/:code/quiz', (req, res) => {
     timeLimit: session.timeLimit
   });
 });
+
 // ==================== ОСТАЛЬНЫЕ МАРШРУТЫ ====================
 
 app.post('/api/sessions/:code/join', async (req, res) => {
