@@ -122,13 +122,16 @@ function applyTranslations() {
   if (restartBtn) restartBtn.textContent = t('btnBack');
 }
 
-window.setLang = function(lang) {
+indow.setLang = function(lang) {
   currentLang = lang;
   applyTranslations();
   // Сохраняем выбор языка в адресную строку без перезагрузки страницы
   const url = new URL(window.location);
   url.searchParams.set('lang', lang);
   window.history.replaceState({}, '', url.toString());
+  
+  // ПРИНУДИТЕЛЬНО ОБНОВЛЯЕМ ГЛОБАЛЬНУЮ ПЕРЕМЕННУЮ
+  currentLang = lang;
   
   // Перезагружаем тест, но не всю страницу
   if (document.getElementById('screen-quiz').style.display === 'block') {
