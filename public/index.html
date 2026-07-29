@@ -121,10 +121,13 @@
   </div>
 
   <!-- Экран статистики -->
-  <div id="screen-stats" style="display:none;">
+    <div id="screen-stats" style="display:none;">
     <div class="row between" style="margin-bottom:16px;">
       <h2 id="stats-test-title" style="margin:0;">Статистика</h2>
-      <button class="btn outline small" onclick="showList(); switchTab('stats')">← Назад</button>
+      <div class="row">
+        <button class="btn outline small" onclick="showList(); switchTab('stats')">← Назад</button>
+        <button class="btn danger small" onclick="clearTestHistory()" id="clear-history-btn">Очистить историю</button>
+      </div>
     </div>
     <h3>Сессии</h3>
     <div id="stats-no-sessions" class="muted" style="display:none;padding:20px;">По этому тесту ещё нет завершённых сессий.</div>
@@ -138,7 +141,6 @@
     <h3>Вопросы</h3>
     <div id="stats-questions-list"></div>
   </div>
-</div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/teacher.js"></script>
