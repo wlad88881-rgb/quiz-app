@@ -72,7 +72,7 @@
 </div>
 
 <script>
-// ==================== ПЕРЕВОДЫ (ВСТРОЕНЫ) ====================
+// ==================== ПЕРЕВОДЫ ====================
 const translations = {
   ru: {
     studentJoin: 'Присоединиться',
@@ -125,7 +125,7 @@ function applyTranslations() {
 window.setLang = function(lang) {
   currentLang = lang;
   applyTranslations();
-  // Добавляем параметр языка в адресную строку и перезагружаем
+  // Перезагружаем страницу с новым параметром языка
   const url = new URL(window.location);
   url.searchParams.set('lang', lang);
   window.location.href = url.toString();
@@ -141,8 +141,8 @@ let timerEnded = false;
 
 async function init() {
   try {
-    const langParam = currentLang === 'kz' ? '?lang=kz' : '';
-    const res = await fetch(`/api/sessions/${sessionCode}/quiz${langParam}`);
+    // ОТПРАВЛЯЕМ ЯЗЫК НА СЕРВЕР
+    const res = await fetch(`/api/sessions/${sessionCode}/quiz?lang=${currentLang}`);
     if (!res.ok) {
       const err = await res.json();
       document.getElementById('join-title').textContent = t('errorLoad');
