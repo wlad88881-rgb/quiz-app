@@ -261,18 +261,16 @@ app.get('/api/sessions/:code/quiz', (req, res) => {
   if (!session) return res.status(404).json({ error: 'Сессия не найдена' });
   if (session.ended) return res.status(410).json({ error: 'Тестирование завершено' });
   
-  // Проверка языка
+  // ВСТАВИТЬ ЭТУ СТРОКУ СЮДА
   const lang = req.query.lang || 'ru';
+  
   let test;
   if (lang === 'kz') {
-    try {
-      const kzTests = require('./kz-tests.json');
-      test = kzTests.find(t => t.id === session.testId);
-    } catch (e) {
-      console.error('Ошибка загрузки kz-tests.json');
-      test = null;
-    }
+    // Если выбран казахский — подгружаем из файла kz-tests.json
+    const kzTests = require('./kz-tests.json');
+    test = kzTests.find(t => t.id === session.testId);
   } else {
+    // Если русский — подгружаем из основной базы
     test = data.tests[session.testId];
   }
 
@@ -289,7 +287,6 @@ app.get('/api/sessions/:code/quiz', (req, res) => {
     timeLimit: session.timeLimit
   });
 });
-
 // ==================== ОСТАЛЬНЫЕ МАРШРУТЫ ====================
 
 app.post('/api/sessions/:code/join', async (req, res) => {
