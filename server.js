@@ -42,6 +42,8 @@ function getBaseUrl() {
   return `http://${getLocalIp()}:${PORT}`;
 }
 
+// ==================== ТЕСТЫ ====================
+
 app.get('/api/tests', (req, res) => {
   const data = db.load();
   const list = Object.values(data.tests).sort((a, b) => b.createdAt - a.createdAt);
@@ -204,6 +206,19 @@ app.get('/api/tests/:id/stats', (req, res) => {
   res.json({ test: { id: test.id, title: test.title }, sessionStats, questionStats });
 });
 
+app.delete('/api/tests/:id/sessions', async (req, res) => {
+  await db.update((d) => {
+    Object.keys(d.sessions).forEach(code => {
+      if (d.sessions[code].testId === req.params.id && !d.sessions[code].type) {
+        delete d.sessions[code];
+      }
+    });
+  });
+  res.json({ ok: true });
+});
+
+// ==================== СЕССИИ ====================
+
 app.post('/api/sessions', async (req, res) => {
   const { testId } = req.body;
   const data = db.load();
@@ -246,7 +261,7 @@ app.get('/api/sessions/:code/quiz', (req, res) => {
   if (session.ended) return res.status(410).json({ error: 'Тестирование завершено' });
   const test = data.tests[session.testId];
   if (!test) return res.status(404).json({ error: 'Тест не найден' });
-    res.json({
+  res.json({
     testTitle: test.title,
     questions: test.questions.map(q => ({
       id: q.id,
@@ -254,8 +269,10 @@ app.get('/api/sessions/:code/quiz', (req, res) => {
       options: q.options,
       multi: q.multi
     })),
-    timeLimit: session.timeLimit // <--- ДОБАВЛЕНА ЭТА СТРОКА
+    timeLimit: session.timeLimit
   });
+});
+
 app.post('/api/sessions/:code/join', async (req, res) => {
   const { name } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: 'Введите имя' });
@@ -399,16 +416,7 @@ function caseForClient(lab, assignment) {
   };
 }
 
-app.delete('/api/tests/:id/sessions', async (req, res) => {
-  await db.update((d) => {
-    Object.keys(d.sessions).forEach(code => {
-      if (d.sessions[code].testId === req.params.id && !d.sessions[code].type) {
-        delete d.sessions[code];
-      }
-    });
-  });
-  res.json({ ok: true });
-});app.get('/api/labs', (req, res) => {
+app.get('/api/labs', (req, res) => {
   const data = db.load();
   const list = Object.values(data.labs).map(l => ({
     id: l.id,
@@ -667,6 +675,7 @@ app.get('/api/lab-sessions/:code/export', (req, res) => {
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   res.send(buf);
 });
+
 app.get('/l/:code', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'lab-student.html'));
 });
@@ -704,4 +713,3 @@ async function start() {
 }
 
 start();
-
