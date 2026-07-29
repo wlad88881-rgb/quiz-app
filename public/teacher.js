@@ -530,11 +530,14 @@ async function saveLab() {
 // ---------- СЕССИЯ ----------
 
 async function startSession(testId) {
+  const timeInput = prompt('Время на тест в минутах (оставьте пустым — без ограничения):');
+  const timeLimit = timeInput && parseInt(timeInput) > 0 ? parseInt(timeInput) : null;
+
   currentSessionType = 'quiz';
   const res = await fetch('/api/sessions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ testId })
+    body: JSON.stringify({ testId, timeLimit })
   });
   const data = await res.json();
   openSession(data.session.code, data);
@@ -561,6 +564,14 @@ async function openSession(code, createData) {
   document.getElementById('session-link').textContent = createData ? createData.url : window.location.origin + '/s/' + code;
   if (createData) {
     document.getElementById('qr-img').src = createData.qrDataUrl;
+  }
+
+  const timeBadge = document.getElementById('session-time-badge');
+  if (session.timeLimit) {
+    timeBadge.textContent = '⏱ ' + session.timeLimit + ' мин';
+    timeBadge.style.display = 'inline-block';
+  } else {
+    timeBadge.style.display = 'none';
   }
 
   setSessionEndedUI(session.ended);
