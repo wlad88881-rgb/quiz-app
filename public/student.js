@@ -10,8 +10,8 @@ async function init() {
     const res = await fetch(`/api/sessions/${sessionCode}/quiz`);
     if (!res.ok) {
       const err = await res.json();
-      document.getElementById('join-title').textContent = 'Недоступно';
-      document.getElementById('join-error').textContent = err.error || 'Тест недоступен';
+      document.getElementById('join-title').textContent = t('errorLoad');
+      document.getElementById('join-error').textContent = err.error || t('errorLoad');
       return;
     }
     quizData = await res.json();
@@ -22,7 +22,7 @@ async function init() {
       participantId = savedPid;
     }
   } catch (e) {
-    document.getElementById('join-error').textContent = 'Не удалось подключиться к серверу';
+    document.getElementById('join-error').textContent = t('errorLoad');
   }
 }
 
@@ -30,7 +30,7 @@ async function joinTest() {
   const name = document.getElementById('student-name').value.trim();
   const errorEl = document.getElementById('join-error');
   errorEl.textContent = '';
-  if (!name) { errorEl.textContent = 'Введите имя'; return; }
+  if (!name) { errorEl.textContent = t('errorName'); return; }
 
   const res = await fetch(`/api/sessions/${sessionCode}/join`, {
     method: 'POST',
@@ -38,19 +38,17 @@ async function joinTest() {
     body: JSON.stringify({ name })
   });
   const data = await res.json();
-  if (!res.ok) { errorEl.textContent = data.error || 'Ошибка'; return; }
+  if (!res.ok) { errorEl.textContent = data.error || t('errorJoin'); return; }
 
   participantId = data.participantId;
   sessionStorage.setItem('pid_' + sessionCode, participantId);
   renderQuiz();
 
-  // ===== ЗАПУСК ТАЙМЕРА =====
   if (quizData.timeLimit && quizData.timeLimit > 0) {
     startTimer(quizData.timeLimit * 60);
   } else {
     document.getElementById('timer').style.display = 'none';
   }
-  // ==========================
 }
 
 function startTimer(seconds) {
@@ -58,8 +56,6 @@ function startTimer(seconds) {
   const timerEl = document.getElementById('timer');
   const timerBar = document.getElementById('timer-bar');
   const total = seconds;
-  
-  // Делаем таймер видимым
   timerEl.style.display = 'flex';
 
   function tick() {
@@ -72,17 +68,13 @@ function startTimer(seconds) {
     timerBar.style.width = pct + '%';
     timerBar.style.background = remaining <= 60 ? '#d64545' : remaining <= total * 0.25 ? '#b26a00' : '#2e9e4f';
 
-    if (remaining <= 60) {
-      timerEl.classList.add('timer-urgent');
-    } else {
-      timerEl.classList.remove('timer-urgent');
-    }
+    if (remaining <= 60) timerEl.classList.add('timer-urgent');
+    else timerEl.classList.remove('timer-urgent');
 
     if (remaining <= 0) {
       clearInterval(timerInterval);
       timerEnded = true;
       timerEl.querySelector('.timer-time').textContent = '00:00';
-      // Автоматическая сдача при истечении времени
       submitQuiz(true);
       return;
     }
@@ -97,6 +89,9 @@ function renderQuiz() {
   document.getElementById('screen-join').style.display = 'none';
   document.getElementById('screen-quiz').style.display = 'block';
   document.getElementById('quiz-title').textContent = quizData.testTitle;
+  document.getElementById('btn-join').textContent = t('studentJoin');
+  document.getElementById('btn-submit').textContent = t('btnSubmit');
+  document.getElementById('timer-notice').textContent = t('timerEnded');
 
   const nav = document.getElementById('q-nav');
   nav.innerHTML = quizData.questions.map((q, i) => `<div id="nav-${q.id}">${i + 1}</div>`).join('');
@@ -144,7 +139,6 @@ function selectAnswer(qid, optionIdx, multi) {
 }
 
 async function submitQuiz(auto = false) {
-  // Если уже завершено по таймеру, не даем отправить повторно
   if (timerEnded && !auto) return;
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
 
@@ -165,12 +159,14 @@ async function submitQuiz(auto = false) {
     body: JSON.stringify({ participantId, answers })
   });
   const data = await res.json();
-  if (!res.ok) { if (errorEl) errorEl.textContent = data.error || 'Ошибка отправки'; return; }
+  if (!res.ok) { if (errorEl) errorEl.textContent = data.error || t('errorSave'); return; }
 
   document.getElementById('screen-quiz').style.display = 'none';
   document.getElementById('screen-result').style.display = 'block';
   document.getElementById('result-score').textContent = `${data.score} / ${data.total}`;
   document.getElementById('result-percent').textContent = Math.round((data.score / data.total) * 100) + '%';
+  document.getElementById('lbl-results').textContent = t('studentResults');
+  document.getElementById('btn-restart').textContent = t('btnBack');
 
   if (auto) {
     const notice = document.getElementById('timer-notice');
@@ -198,8 +194,8 @@ function renderReview(review) {
     }).join('');
 
     const statusBadge = q.isCorrect
-      ? '<span class="badge live">Верно</span>'
-      : '<span class="badge" style="background:#fdeaea;color:#d64545">Неверно</span>';
+      ? '<span class="badge live">' + t('studentCorrect') + '</span>'
+      : '<span class="badge" style="background:#fdeaea;color:#d64545">' + t('studentWrong') + '</span>';
 
     return `
       <div class="card">
