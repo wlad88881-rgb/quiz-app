@@ -125,10 +125,15 @@ function applyTranslations() {
 window.setLang = function(lang) {
   currentLang = lang;
   applyTranslations();
-  // Перезагружаем страницу с новым параметром языка
+  // Сохраняем выбор языка в адресную строку без перезагрузки страницы
   const url = new URL(window.location);
   url.searchParams.set('lang', lang);
-  window.location.href = url.toString();
+  window.history.replaceState({}, '', url.toString());
+  
+  // Перезагружаем тест, но не всю страницу
+  if (document.getElementById('screen-quiz').style.display === 'block') {
+    loadQuiz();
+  }
 };
 
 // ==================== ЛОГИКА УЧЕНИКА ====================
