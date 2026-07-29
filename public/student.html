@@ -5,19 +5,69 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Тестирование</title>
 <link rel="stylesheet" href="/style.css">
+<style>
+  #timer {
+    display: none;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--navy);
+    color: white;
+    padding: 10px 20px;
+    align-items: center;
+    gap: 14px;
+  }
+  .timer-label { font-size: 13px; color: #aab4be; }
+  .timer-time {
+    font-family: 'Courier New', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    min-width: 60px;
+  }
+  .timer-track {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  #timer-bar {
+    height: 6px;
+    border-radius: 4px;
+    background: #2e9e4f;
+    transition: width 1s linear, background 0.5s;
+    width: 100%;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  .timer-urgent .timer-time { animation: pulse 1s infinite; color: #ff6b6b; }
+</style>
 </head>
 <body>
+
 <div class="brand-header">
   <div class="brand-mark">ERG</div>
   <div class="brand-text">
     <div class="brand-title">ERG Corporate University</div>
-    <div class="brand-subtitle">Академия ТОиР</div>
+    <div class="brand-subtitle">Академия ТОиР — Тестирование</div>
   </div>
 </div>
-<div class="container narrow" id="app">
+
+<div id="timer">
+  <div class="timer-label">Осталось времени</div>
+  <div class="timer-time">--:--</div>
+  <div class="timer-track">
+    <div id="timer-bar"></div>
+  </div>
+</div>
+
+<div class="container narrow">
 
   <div id="screen-join" class="center">
-    <h1 id="join-title">Тестирование</h1>
+    <h1 id="join-title">Тест</h1>
     <div class="card">
       <label>Введите ваше имя и фамилию</label>
       <input type="text" id="student-name" placeholder="Иванов Иван">
@@ -36,8 +86,11 @@
 
   <div id="screen-result" style="display:none">
     <h1 class="center">Тест завершён</h1>
+    <div class="card center" id="timer-notice" style="display:none;background:#fdeaea;border-color:#d64545;margin-bottom:16px">
+      <strong style="color:#d64545">Время вышло — тест отправлен автоматически</strong>
+    </div>
     <div class="card center">
-      <p class="muted">Ваш результат:</p>
+      <p class="muted">Правильных ответов:</p>
       <div class="code-big" id="result-score"></div>
       <p id="result-percent" class="muted"></p>
     </div>
