@@ -215,6 +215,7 @@ app.post('/api/sessions', async (req, res) => {
     code,
     testId,
     testTitle: test.title,
+    timeLimit: req.body.timeLimit || null,
     startedAt: Date.now(),
     ended: false,
     participants: {}
