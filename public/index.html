@@ -20,9 +20,9 @@
 <div class="container">
   <!-- Вкладки -->
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('tests')">📚 Тесты</button>
-    <button class="tab-btn" onclick="switchTab('labs')">🧪 Тренажёры</button>
-    <button class="tab-btn" onclick="switchTab('stats')">📊 Статистика</button>
+    <button class="tab-btn active" id="tab-btn-tests" onclick="switchTab('tests')">📚 Тесты</button>
+    <button class="tab-btn" id="tab-btn-labs" onclick="switchTab('labs')">🧪 Тренажёры</button>
+    <button class="tab-btn" id="tab-btn-stats" onclick="switchTab('stats')">📊 Статистика</button>
   </div>
 
   <!-- Основной экран -->
@@ -77,10 +77,13 @@
     <div id="lab-save-error" class="error"></div>
   </div>
 
-  <!-- Экран сессии -->
+  <!-- Экран сессии (Здесь появятся кнопка назад и ученики) -->
   <div id="screen-session" style="display:none;">
     <div class="row between" style="margin-bottom:16px;">
-      <h2 id="session-title" style="margin:0;">Сессия</h2>
+      <div class="row">
+        <button class="btn outline small" onclick="showList()">← Назад к тестам</button>
+        <h2 id="session-title" style="margin:0; margin-left:16px;">Сессия</h2>
+      </div>
       <div class="row">
         <span id="session-status" class="badge live">Идёт тестирование</span>
         <button class="btn danger" id="end-session-btn" onclick="endSession()">Завершить сессию</button>
@@ -102,9 +105,17 @@
         </div>
       </div>
     </div>
+
+    <!-- ТАБЛИЦА УЧЕНИКОВ (ВОТ ЗДЕСЬ ОНА ПОЯВИТСЯ) -->
     <div id="no-participants" class="muted" style="text-align:center;padding:40px;">Пока никто не присоединился.</div>
-    <table id="results-table" style="display:none;">
-      <thead><tr><th>Участник</th><th>Статус</th><th>Результат</th></tr></thead>
+    <table id="results-table" style="display:none; margin-top:20px;">
+      <thead>
+        <tr>
+          <th>Участник</th>
+          <th>Статус</th>
+          <th>Результат</th>
+        </tr>
+      </thead>
       <tbody id="results-body"></tbody>
     </table>
   </div>
