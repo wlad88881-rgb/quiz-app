@@ -125,19 +125,22 @@ function applyTranslations() {
 window.setLang = function(lang) {
   currentLang = lang;
   applyTranslations();
-  // Сохраняем выбор языка в адресную строку без перезагрузки страницы
+  // Сохраняем выбор языка в адресную строку и ПЕРЕЗАГРУЖАЕМ СТРАНИЦУ
   const url = new URL(window.location);
   url.searchParams.set('lang', lang);
-  window.history.replaceState({}, '', url.toString());
-  
-  // Если тест уже открыт, перезагружаем его
-  if (document.getElementById('screen-quiz').style.display === 'block') {
-    loadQuiz();
-  }
+  window.location.href = url.toString(); // Полная перезагрузка с параметром в адресе
 };
 
 // ==================== ЛОГИКА УЧЕНИКА ====================
 const sessionCode = window.location.pathname.split('/s/')[1];
+
+// СЧИТЫВАЕМ ЯЗЫК ИЗ АДРЕСНОЙ СТРОКИ ПРИ ЗАГРУЗКЕ
+const urlParams = new URLSearchParams(window.location.search);
+const langFromUrl = urlParams.get('lang');
+if (langFromUrl) {
+  currentLang = langFromUrl;
+}
+
 let quizData = null;
 let participantId = null;
 const answers = {};
